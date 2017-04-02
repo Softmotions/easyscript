@@ -42,7 +42,7 @@ Words:
     
 ### Run
 
-run `true` if exit code is not zero
+run command `true` if exit code is not zero
 
     [lines] `<command>` [write]
         <body|fail handler>
@@ -82,18 +82,24 @@ find evaluated to `true` if found.
     shell
         <shell body>
         
+        
+# Examples        
+        
 ```text
 
 if file exists <file|dir>
-   echo 
+    body.. 
 
 if dir not exists <file> 
+    body..
 	
 
 if file executable <file|dir>
+    body..
 
 
 if file readable <file|dir>
+    body..
 
 
 if file writable <file|dir>
@@ -104,10 +110,10 @@ if file writable <file|dir>
 		
 
 if file exists <dir> and (file exists or file exec) <file>
-	run <
+	body..
 
-run test 
-run parallel test
+`cmd`              # Run command 
+bg `cmd`           # Run command in background 
  
 each myline in `ps -Af`
 	echo myline
@@ -116,21 +122,20 @@ each myline in `ps -Af`
 	send line > adamansky@gmail.com 	   #send line as email
 	send line > adamansky@gmail.com file   #send line to file (file as specifier) 
 
-set env MYENV "Var" 
-set MYVAR 1
+set env MYENV "Var"     # Set environment variable MYENV
+set MYVAR 1             # Set local variable 
 set MYVAR 22
 
-read file.txt as VAR > append file.txt
-read lines file.txt as MyVar
-lines `cmd` as MyVar
+read file.txt as VAR > append file.txt   # Read file into variable VAR and copy its data to file.txt
+read lines file.txt as MyVar             # Read file into variable MyVar
+lines `cmd` as MyVar                     # Executed comand cmd and parse output as lines
 
 
-run path.txt > file
-
-append """ Some big text 
+append """ Some multiline text 
             with {VAR} """ > file.txt
            
-"Simple string" > file.txt     
+"Simple string" > file.txt              #  Replace file data with "Simple string"
+append "Simple string" > file.txt       # Append to end of file
     
    
 find /regexp/ in {VAR} as FOUND
