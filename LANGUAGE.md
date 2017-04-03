@@ -156,7 +156,7 @@ copy dir/**/f?le* <target>
 permit group read write > <file>
 permit 677 > <file>
 
-if arg1 == "test"
+if arg1 = "test"
     echo Hello 
     
 if arg3 in ["one", "two", "free"]
