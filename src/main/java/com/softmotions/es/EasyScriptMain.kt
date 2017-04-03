@@ -2,8 +2,9 @@ package com.softmotions.es
 
 import org.parboiled.Parboiled
 import org.parboiled.buffers.IndentDedentInputBuffer
+import org.parboiled.common.StringBuilderSink
 import org.parboiled.errors.ErrorUtils
-import org.parboiled.parserunners.ReportingParseRunner
+import org.parboiled.parserunners.TracingParseRunner
 import org.parboiled.support.ParseTreeUtils.printNodeTree
 
 /**
@@ -18,31 +19,55 @@ class EasyScriptMain {
     }
 
     fun run(vararg args: String) {
-        val data0 = "set VAR0 110"
-        val data1 = """
-set VAR0 110
-env VAR1 "test"
-set VAR2 `pwd`
-    echo "Failed to run"
+        
+        val data0 = """
+# Simple comment
+ # This is second comment
+set VAR0 test
+    set BAR1 'bar'      ## Set my var
+        set DAR2 `dar`
+set env ZAR1 "zbar"
+""";
+        val data5 = """
 
-echo VAR2
-echo "VAR2={VAR2}"
+    set env VAR01 `test`
 
-set FILE "~/.profile"
-if file exists "{FILE}"
-    echo "File {FILE} exists"
-else
-    echo "File {FILE} is not exists"
-
-`cat {FILE}`
-    fail "Oops.." exit 1
 """
+        val data4 = "set env VAR01 `test`"
+        val data3 = "set VAR01 'test'"
+        val data2 = "set VAR01 \"test\""
+        val data1 = "set VAR0 test"
+
+//        val data1 = """
+//set VAR0 110
+//env VAR1 "test"
+//set VAR2 `pwd`
+//    echo "Failed to run"
+//
+//echo VAR2
+//echo "VAR2={VAR2}"
+//
+//set FILE "~/.profile"
+//if file exists "{FILE}"
+//    echo "File {FILE} exists"
+//else
+//    echo "File {FILE} is not exists"
+//
+//`cat {FILE}`
+//    fail "Oops.." exit 1
+//"""
         val data = data0;
-        val parser = Parboiled.createParser(ESParser::class.java);
-        val result = ReportingParseRunner<Any>(parser.Sript())
+        val parser = Parboiled.createParser(ESPTreeParser::class.java);
+        
+//        val result = ReportingParseRunner<Any>(parser.Sript())
+//                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))
+        val runner = TracingParseRunner<Any>(parser.Sript());
+        runner.withLog(StringBuilderSink())
+        val result = runner
                 .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))
         if (!result.parseErrors.isEmpty()) {
             println(ErrorUtils.printParseError(result.parseErrors[0]))
+            System.out.println(runner.log);
         } else {
             println("NodeTree: ${printNodeTree(result)}\n")
             val value = result.parseTreeRoot?.value
