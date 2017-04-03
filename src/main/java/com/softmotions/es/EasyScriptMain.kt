@@ -27,7 +27,7 @@ set VAR0 test
     set BAR1 'bar'      ## Set my var
         set DAR2 `dar`
 set env ZAR1 "zbar"
-""";
+"""
         val data5 = """
 
     set env VAR01 `test`
