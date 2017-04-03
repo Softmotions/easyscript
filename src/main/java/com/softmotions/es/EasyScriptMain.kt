@@ -19,18 +19,25 @@ class EasyScriptMain {
     }
 
     fun run(vararg args: String) {
-        
         val data0 = """
+set VAR zzz
+set BBB2 xxx
+"""
+
+        val data6 = """
 # Simple comment
  # This is second comment
 set VAR0 test
     set BAR1 'bar'      ## Set my var
         set DAR2 `dar`
+
 set env ZAR1 "zbar"
+    set env ZAR2 "zbar2"
 """
         val data5 = """
 
     set env VAR01 `test`
+    set VAR [[one,\"two\",99], 'three', `cmd`, []]
 
 """
         val data4 = "set env VAR01 `test`"
@@ -61,7 +68,7 @@ set env ZAR1 "zbar"
         
 //        val result = ReportingParseRunner<Any>(parser.Sript())
 //                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))
-        val runner = TracingParseRunner<Any>(parser.Sript());
+        val runner = TracingParseRunner<Any>(parser.Script());
         runner.withLog(StringBuilderSink())
         val result = runner
                 .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))

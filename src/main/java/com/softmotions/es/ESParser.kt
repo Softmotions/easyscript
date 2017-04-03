@@ -19,18 +19,27 @@ open class ESParser : BaseParser<Any>() {
         val SPACE_LF_CHARS = "${SPACE_CHARS}${LF_CHARS}"
     }
 
-    open fun Sript(): Rule {
+    open fun Script(): Rule {
         return Sequence(ZeroOrMore(Block(), Spacing()), BaseParser.EOI)
     }
 
+    /*open fun FirstBlock(): Rule {
+        return Sequence(
+                Spacing(),
+                FirstOf(
+                        Set(),
+                        Unset()
+                ),
+                Optional(Sequence(Spacing(), ChildBlock()))
+        )
+    }*/
+    
     open fun Block(): Rule {
         return Sequence(
                 Spacing(),
-                OneOrMore(
-                        FirstOf(
-                                Set(),
-                                Unset()
-                        )
+                FirstOf(
+                        Set(),
+                        Unset()
                 ),
                 Optional(Sequence(Spacing(), ChildBlock()))
         )
@@ -59,14 +68,34 @@ open class ESParser : BaseParser<Any>() {
                 Identifier())
     }
 
+    open fun If(): Rule {
+        return Sequence(
+                Action("if"),
+                FirstOf(
+                        IfFile(),
+                        IfCompare()
+                )
+        )
+    }
+
+    open fun IfFile(): Rule {
+        return Sequence(
+                FirstOf("file", "dir", "link"),
+                ANY
+        )
+    }
+
+    open fun IfCompare(): Rule {
+        return ANY
+    }
+
     open fun Action(name: String): Rule {
-        return Sequence(LineStart(), name, Blank());
+        return Sequence(name, Blank());
     }
 
     @MemoMismatches
     open fun Action(): Rule {
         return Sequence(
-                LineStart(),
                 FirstOf(
                         "if", "else",
                         "set", "unset",
@@ -77,10 +106,6 @@ open class ESParser : BaseParser<Any>() {
                 Blank());
     }
 
-    // todo
-    open fun LineStart(): Rule {
-        return FirstOf(Spacing(), INDENT);
-    }
 
     @SuppressSubnodes
     open fun Data(): Rule {
@@ -88,7 +113,21 @@ open class ESParser : BaseParser<Any>() {
                 Identifier(),
                 Run(),
                 StringDoubleQuoted(),
-                StringSingleQuoted());
+                StringSingleQuoted(),
+                Array());
+    }
+
+    open fun Array(): Rule {
+        return Sequence(
+                '[',
+                Spacing(),
+                Optional(
+                        Data(),
+                        ZeroOrMore(',', Spacing(), Data())
+                ),
+                Spacing(),
+                ']'
+        )
     }
 
     @SuppressSubnodes
@@ -129,7 +168,6 @@ open class ESParser : BaseParser<Any>() {
         return ZeroOrMore(FirstOf(
                 // whitespace
                 OneOrMore(AnyOf(SPACE_LF_CHARS).label("Whitespace")),
-                /*DEDENT,*/
                 Sequence(
                         "#",
                         ZeroOrMore(TestNot(AnyOf(LF_CHARS)), BaseParser.ANY),
