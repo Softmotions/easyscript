@@ -20,36 +20,43 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun Script(): Rule {
-        return Sequence(ZeroOrMore(Block(), Spacing()), BaseParser.EOI)
-    }
-
-    /*open fun FirstBlock(): Rule {
         return Sequence(
                 Spacing(),
-                FirstOf(
-                        Set(),
-                        Unset()
-                ),
-                Optional(Sequence(Spacing(), ChildBlock()))
+                Optional(FirstBlock()),
+                FirstOf(Spacing(), EOI))
+    }
+
+    open fun FirstBlock(): Rule {
+        return Sequence(
+                BlockCore().label("FirstBlock::Core"),
+                Optional(Block().label("FirstBlock::Block"))
         )
-    }*/
-    
+    }
+
     open fun Block(): Rule {
         return Sequence(
-                Spacing(),
-                FirstOf(
-                        Set(),
-                        Unset()
-                ),
-                Optional(Sequence(Spacing(), ChildBlock()))
+                FirstOf(IndentDedent(), BlankWithLF()),
+                BlockCore(),
+                Optional(Block()),
+                Optional(IndentDedent())
         )
     }
 
-    open fun ChildBlock(): Rule {
-        return Sequence(
-                INDENT,
-                OneOrMore(Block(), Spacing()),
-                DEDENT)
+    @SuppressSubnodes
+    open fun IndentDedent(): Rule = OneOrMore(FirstOf(Indent(), Dedent()))
+
+    @SuppressSubnodes
+    open fun Indent(): Rule = Sequence(Spacing(), INDENT)
+
+    @SuppressSubnodes
+    open fun Dedent(): Rule = Sequence(Spacing(), DEDENT)
+
+
+    open fun BlockCore(): Rule {
+        return FirstOf(
+                Set(),
+                Unset()
+        )
     }
 
     open fun Set(): Rule {
@@ -163,22 +170,30 @@ open class ESParser : BaseParser<Any>() {
 
     open fun Digit(): Rule = CharRange('0', '9')
 
+
     @SuppressSubnodes
     open fun Spacing(): Rule {
-        return ZeroOrMore(FirstOf(
-                // whitespace
-                OneOrMore(AnyOf(SPACE_LF_CHARS).label("Whitespace")),
-                Sequence(
-                        "#",
-                        ZeroOrMore(TestNot(AnyOf(LF_CHARS)), BaseParser.ANY),
-                        FirstOf(LF_CHARS, '\r', '\n', BaseParser.EOI)
-                )
-        ))
+        return ZeroOrMore(AnyOf(SPACE_LF_CHARS).label("Spacing"))
+    }
+
+    @SuppressSubnodes
+    open fun SpacingNoLF(): Rule {
+        return ZeroOrMore(AnyOf(SPACE_CHARS).label("SpacingNoLF"))
+
     }
 
     @SuppressSubnodes
     open fun Blank(): Rule {
         return OneOrMore(AnyOf(SPACE_CHARS).label("Blank"))
+    }
+
+    @SuppressSubnodes
+    open fun BlankWithLF(): Rule {
+        return OneOrMore(
+                Optional(AnyOf(SPACE_CHARS)),
+                AnyOf(LF_CHARS),
+                Optional(AnyOf(SPACE_CHARS))
+        )
     }
 
     open fun Escape(): Rule {
@@ -205,6 +220,11 @@ open class ESParser : BaseParser<Any>() {
     override fun fromCharLiteral(c: Char): Rule {
         // turn of creation of parse tree nodes for single characters
         return super.fromCharLiteral(c).suppressNode()
+    }
+
+    fun debug(vararg s: String): Boolean {
+        System.err.println(s.toList()) // set breakpoint here if required
+        return true
     }
 
 }

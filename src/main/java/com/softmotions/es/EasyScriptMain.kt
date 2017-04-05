@@ -20,9 +20,10 @@ class EasyScriptMain {
 
     fun run(vararg args: String) {
         val data0 = """
-set VAR zzz
-set BBB2 xxx
+set DAR1 `dar1` # Comment
 """
+
+
 
         val data6 = """
 # Simple comment
