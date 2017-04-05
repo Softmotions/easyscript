@@ -83,7 +83,30 @@ find evaluated to `true` if found.
         <shell body>
         
         
-# Examples        
+# Examples       
+ 
+```text
+    
+        
+    `mktemp -d` as TD
+    copy ./**/*.f > TD
+    
+    if file exists 'myfile'
+       echo "Copying {it} to {TD}"
+       copy it > TD
+    
+    
+    if file exists 'myfile' as FF
+       echo "Copying {FF} to {TD}"
+       copy FF > TD
+       
+    
+    `tar -cvf {TD:filename}.tgz {TD}`
+    `rm -rf {TD}`
+
+    
+``` 
+ 
         
 ```text
 
