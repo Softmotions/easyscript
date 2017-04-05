@@ -19,11 +19,22 @@ class EasyScriptMain {
     }
 
     fun run(vararg args: String) {
+
         val data0 = """
-set DAR1 `dar1` # Comment
+
+set VAR0 test
+    set VAR0 test
+        set env VAR0 test
+        set VAR0 test
+set VAR0 test
+
 """
 
+        val data7 = """
 
+set VAR [one, two, `three`,"four",1111]
+
+"""
 
         val data6 = """
 # Simple comment
@@ -38,7 +49,7 @@ set env ZAR1 "zbar"
         val data5 = """
 
     set env VAR01 `test`
-    set VAR [[one,\"two\",99], 'three', `cmd`, []]
+    set VAR [one, \"two\",99]
 
 """
         val data4 = "set env VAR01 `test`"

@@ -23,7 +23,7 @@ open class ESParser : BaseParser<Any>() {
         return Sequence(
                 Spacing(),
                 Optional(FirstBlock()),
-                FirstOf(Spacing(), EOI))
+                Spacing())
     }
 
     open fun FirstBlock(): Rule {
@@ -113,15 +113,21 @@ open class ESParser : BaseParser<Any>() {
                 Blank());
     }
 
-
     @SuppressSubnodes
     open fun Data(): Rule {
+        return FirstOf(
+                AtomicData(),
+                Array());
+    }
+
+    @SuppressSubnodes
+    open fun AtomicData(): Rule {
         return FirstOf(
                 Identifier(),
                 Run(),
                 StringDoubleQuoted(),
                 StringSingleQuoted(),
-                Array());
+                Number());
     }
 
     open fun Array(): Rule {
@@ -129,8 +135,8 @@ open class ESParser : BaseParser<Any>() {
                 '[',
                 Spacing(),
                 Optional(
-                        Data(),
-                        ZeroOrMore(',', Spacing(), Data())
+                        AtomicData(),
+                        ZeroOrMore(',', Spacing(), AtomicData())
                 ),
                 Spacing(),
                 ']'
@@ -138,13 +144,15 @@ open class ESParser : BaseParser<Any>() {
     }
 
     @SuppressSubnodes
-    @MemoMismatches
     open fun Identifier(): Rule {
         return Sequence(
                 TestNot(Action()),
                 Letter(),
                 ZeroOrMore(LetterOrDigit()))
     }
+
+    @SuppressSubnodes
+    open fun Number(): Rule = OneOrMore(Digit())
 
     @SuppressSubnodes
     open fun Run(): Rule {
@@ -179,7 +187,6 @@ open class ESParser : BaseParser<Any>() {
     @SuppressSubnodes
     open fun SpacingNoLF(): Rule {
         return ZeroOrMore(AnyOf(SPACE_CHARS).label("SpacingNoLF"))
-
     }
 
     @SuppressSubnodes
@@ -210,7 +217,7 @@ open class ESParser : BaseParser<Any>() {
                 ZeroOrMore(
                         FirstOf(
                                 Escape(),
-                                Sequence(TestNot(AnyOf("${LF_CHARS}${quoteChar}\\")), BaseParser.ANY)
+                                Sequence(TestNot(AnyOf("${LF_CHARS}${quoteChar}\\")), ANY)
                         )
                 ),
                 quoteChar
