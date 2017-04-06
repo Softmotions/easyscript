@@ -16,6 +16,8 @@ class BasicBlocks : BaseTest() {
 
     @Test
     fun testSet1() {
+        parse(true) { "  " }
+        parse(true) { " abr acad abra " }
         parse { "set VAR0 test" }
         parse { "set VAR01 \"test\"" }
         parse { "set VAR01 'test'" }
