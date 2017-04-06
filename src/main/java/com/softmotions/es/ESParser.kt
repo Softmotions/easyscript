@@ -22,7 +22,7 @@ open class ESParser : BaseParser<Any>() {
     open fun Script(): Rule {
         return Sequence(
                 Spacing(),
-                Optional(FirstBlock()),
+                FirstBlock(),
                 Spacing())
     }
 

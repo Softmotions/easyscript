@@ -22,40 +22,8 @@ class EasyScriptMain {
 
         val data0 = """
 
-set VAR0 test
-    set VAR0 test
-        set env VAR0 test
-        set VAR0 test
-set VAR0 test
-
 """
 
-        val data7 = """
-
-set VAR [one, two, `three`,"four",1111]
-
-"""
-
-        val data6 = """
-# Simple comment
- # This is second comment
-set VAR0 test
-    set BAR1 'bar'      ## Set my var
-        set DAR2 `dar`
-
-set env ZAR1 "zbar"
-    set env ZAR2 "zbar2"
-"""
-        val data5 = """
-
-    set env VAR01 `test`
-    set VAR [one, \"two\",99]
-
-"""
-        val data4 = "set env VAR01 `test`"
-        val data3 = "set VAR01 'test'"
-        val data2 = "set VAR01 \"test\""
-        val data1 = "set VAR0 test"
 
 //        val data1 = """
 //set VAR0 110
