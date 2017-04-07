@@ -55,7 +55,8 @@ open class ESParser : BaseParser<Any>() {
     open fun BlockCore(): Rule {
         return FirstOf(
                 Set(),
-                Unset()
+                Unset(),
+                If()
         )
     }
 
@@ -93,7 +94,7 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun IfCompare(): Rule {
-        return ANY
+        return NOTHING
     }
 
     open fun Action(name: String): Rule {

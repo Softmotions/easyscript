@@ -20,9 +20,7 @@ class EasyScriptMain {
 
     fun run(vararg args: String) {
 
-        val data0 = """
-
-"""
+        val data0 = """if file exists 'myfile.txt' """
 
 
 //        val data1 = """
