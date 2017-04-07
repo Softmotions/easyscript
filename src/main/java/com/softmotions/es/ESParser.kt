@@ -79,6 +79,7 @@ open class ESParser : BaseParser<Any>() {
     open fun If(): Rule {
         return Sequence(
                 Action("if"),
+                Blank(),
                 FirstOf(
                         IfFile(),
                         IfCompare()
@@ -89,12 +90,22 @@ open class ESParser : BaseParser<Any>() {
     open fun IfFile(): Rule {
         return Sequence(
                 FirstOf("file", "dir", "link"),
-                ANY
+                Optional(Is()),
+                Optional(Not())
+
         )
     }
 
     open fun IfCompare(): Rule {
         return NOTHING
+    }
+
+    open fun Is(): Rule {
+        return Sequence(Blank(), String("is"));
+    }
+
+    open fun Not(): Rule {
+        return Sequence(Blank(), String("not"));
     }
 
     open fun Action(name: String): Rule {
