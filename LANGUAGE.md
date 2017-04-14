@@ -79,8 +79,13 @@ find evaluated to `true` if found.
     
 ### Shell
   
-    shell
+    shell """
         <shell body>
+    """
+    
+    shell `cat ./myscript.sh`
+    
+    shell 'ls'
         
         
 # Examples       
@@ -167,12 +172,13 @@ find /regexp/ in file*name.txt
 
 replace /regexp/ with <var|literal> < <file>
 
-shell 
+shell """
     Here is free shell command
     cat <<  END
     
     ;l;l
     END
+"""
     
 copy dir/**/f?le* <target>
  

@@ -133,6 +133,54 @@ set env E `ls`
 """
         }
 
+        parse {
+            """
+
+  echo $TQ
+            Hello
+    I'm a multiline
+                    string
+
+$TQ
+"""
+        }
+
+        parse {
+            """
+
+  set VAR1 $TQ
+    one
+        two
+            three
+$TQ
+"""
+        }
+
+        parse {
+            """
+  set VAR1 ['first', $TQ second
+multi line $TQ  ]
+"""
+        }
+
+
+        parse {
+            """
+
+shell 'echo "test"'
+
+"""
+        }
+
+        parse {
+            """
+shell $TQ
+   ls -al './{FILE}';
+   cat /etc/passwd > /tmp/passwd
+$TQ
+"""
+        }
+
     }
 
 }

@@ -49,16 +49,26 @@ open class ESParser : BaseParser<Any>() {
                 Run(),
                 If(),
                 Else(),
-                Fail()
+                Fail(),
+                Shell()
         )
     }
 
+
+    open fun Shell(): Rule {
+        return Sequence(
+                Action("shell"),
+                Data()
+        )
+    }
+    
     open fun Fail(): Rule {
         return Sequence(
                 Action("fail"),
                 Optional(
-                        FirstOf(StringSingleQuoted(),
-                                StringDoubleQuoted() /* todo call */)
+                        FirstOf(StringMultiQuoted(),
+                                StringDoubleQuoted(),
+                                StringSingleQuoted() /* todo call */)
                 ),
                 Optional(
                         SpacingNoLF().suppressNode(),
@@ -202,6 +212,7 @@ open class ESParser : BaseParser<Any>() {
         return FirstOf(
                 Identifier(),
                 Run(),
+                StringMultiQuoted(),
                 StringDoubleQuoted(),
                 StringSingleQuoted(),
                 Number());
@@ -235,6 +246,18 @@ open class ESParser : BaseParser<Any>() {
     open fun Run(): Rule {
         return Quoted("Run", '`')
     }
+
+    open fun StringMultiQuoted(): Rule {
+        val quoteChar = "\"\"\"";
+        return Sequence(
+                quoteChar,
+                ZeroOrMore(
+                        Sequence(TestNot(AnyOf(quoteChar)), ANY)
+                ),
+                quoteChar
+        ).suppressSubnodes();
+    }
+
 
     @SuppressSubnodes
     open fun StringDoubleQuoted(): Rule {

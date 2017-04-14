@@ -16,6 +16,11 @@ open class BaseTest {
     @JvmField
     protected val log = LoggerFactory.getLogger(javaClass)
 
+    companion object {
+        @JvmStatic
+        protected val TQ = "\"\"\""
+    }
+
     val parser: ESPTreeParser by lazy(LazyThreadSafetyMode.NONE, {
         Parboiled.createParser(ESPTreeParser::class.java)
     })
@@ -28,7 +33,7 @@ open class BaseTest {
         val runner = TracingParseRunner<Any>(parser.Script()).withLog(StringBuilderSink())
         val result = runner
                 .run(IndentDedentInputBuffer(text().toCharArray(),
-                        4, "#", true, true))
+                        4, "#", false, true))
         assertTrue(if (result.parseErrors.isEmpty()) !fail else {
             if (!fail) {
                 println(ErrorUtils.printParseError(result.parseErrors[0]))

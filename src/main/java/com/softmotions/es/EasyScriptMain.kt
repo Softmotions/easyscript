@@ -13,6 +13,10 @@ import org.parboiled.support.ParseTreeUtils.printNodeTree
 class EasyScriptMain {
 
     companion object {
+
+        @JvmStatic
+        val TQ = "\"\"\""
+
         @JvmStatic fun main(vararg args: String) {
             EasyScriptMain().run()
         }
@@ -20,16 +24,11 @@ class EasyScriptMain {
 
     fun run(vararg args: String) {
 
-        val data0 =             """
-
-if A >= 'val'
-    echo 'One'
-    if A <= 'val2'
-        echo 'One2'
-        if `A` <= 'val3'
-            echo 'One3'
-        set V "foo"
-set env E `ls`
+        val data0 = """
+shell $TQ
+   ls -al './{FILE}';
+   cat /etc/passwd > /tmp/passwd
+$TQ
 """
 
 
@@ -49,13 +48,13 @@ set env E `ls`
 //"""
         val data = data0;
         val parser = Parboiled.createParser(ESPTreeParser::class.java);
-        
+
 //        val result = ReportingParseRunner<Any>(parser.Sript())
 //                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))
         val runner = TracingParseRunner<Any>(parser.Script());
         runner.withLog(StringBuilderSink())
         val result = runner
-                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))
+                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", false, true))
         if (!result.parseErrors.isEmpty()) {
             println(ErrorUtils.printParseError(result.parseErrors[0]))
             System.out.println(runner.log);
