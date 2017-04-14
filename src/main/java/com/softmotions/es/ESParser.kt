@@ -50,10 +50,17 @@ open class ESParser : BaseParser<Any>() {
                 If(),
                 Else(),
                 Fail(),
+                RunBlock(),
                 Shell()
         )
     }
 
+    open fun RunBlock(): Rule {
+        return Sequence(
+                Optional("lines", Blank()),
+                Run()
+        )
+    }
 
     open fun Shell(): Rule {
         return Sequence(
@@ -61,7 +68,7 @@ open class ESParser : BaseParser<Any>() {
                 Data()
         )
     }
-    
+
     open fun Fail(): Rule {
         return Sequence(
                 Action("fail"),

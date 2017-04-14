@@ -25,10 +25,7 @@ class EasyScriptMain {
     fun run(vararg args: String) {
 
         val data0 = """
-shell $TQ
-   ls -al './{FILE}';
-   cat /etc/passwd > /tmp/passwd
-$TQ
+lines `ps -Af`
 """
 
 
