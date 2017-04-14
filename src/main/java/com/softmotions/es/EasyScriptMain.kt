@@ -21,14 +21,14 @@ class EasyScriptMain {
     fun run(vararg args: String) {
 
         val data0 =             """
+if file not exists 'myfile.txt'
+    fail "Fail1"
 
-    set env VAR01 `test`
-        set VAR [one, "two",99]
-            set VAR [one, "two1",991]
+if file exists 'myfile2.txt'
+    fail 'Fail 2' exit 22
 
-        set VAR [qqq, "two1",991]
-
-    set VAR [qqq, "two1",weww]
+if file exists 'myfile2.txt'
+    fail exit 33
 
 """
 
@@ -43,11 +43,7 @@ class EasyScriptMain {
 //echo "VAR2={VAR2}"
 //
 //set FILE "~/.profile"
-//if file exists "{FILE}"
-//    echo "File {FILE} exists"
-//else
-//    echo "File {FILE} is not exists"
-//
+
 //`cat {FILE}`
 //    fail "Oops.." exit 1
 //"""

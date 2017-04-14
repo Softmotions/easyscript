@@ -22,6 +22,13 @@ class TestBasicBlocks : BaseTest() {
         parse { "set VAR01 \"test\"" }
         parse { "set VAR01 'test'" }
         parse { "set env VAR01 `test`" }
+        parse(true) {
+            """
+echo 'Hello1'
+    ech1o bar
+"""
+        }
+
         parse {
             """
 
@@ -72,5 +79,47 @@ if file exists ['myfile.txt', "bar.txt"]
 """
         }
 
+        parse {
+            """
+if file exists 'path.txt'
+    and file exists `pwd`
+    or file readable "/path/to/my/file.txt"
+    echo 'Hello!'
+"""
+        }
+
+        parse {
+            """
+if file exists 'path.txt'
+    and file exists `pwd`
+    or file readable "/path/to/my/file.txt" and file writable 'path2.txt'
+    echo 'Hello!'
+else if file exists 'path2.txt'
+    echo 'ElseIf'
+    if file exists 'path3.txt'
+        echo 'ElseIf2'
+    else
+        echo 'ElseIf2Else'
+else
+    echo "Else"
+"""
+        }
+
+        parse {
+            """
+if file not exists 'myfile.txt'
+    fail "Fail1"
+
+if file exists 'myfile2.txt'
+    fail 'Fail 2' exit 22
+
+if file exists 'myfile2.txt'
+    fail exit 33
+
+"""
+        }
+
     }
+
+
 }

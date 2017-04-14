@@ -45,10 +45,28 @@ open class ESParser : BaseParser<Any>() {
 
     open fun BlockCore(): Rule {
         return FirstOf(
+                Echo(),
                 Set(),
                 Unset(),
+                Run(),
                 If(),
-                Echo()
+                Else(),
+                Fail()
+        )
+    }
+    
+    open fun Fail(): Rule {
+        return Sequence(
+                Action("fail"),
+                Optional(
+                        FirstOf(StringSingleQuoted(),
+                                StringDoubleQuoted() /* todo call */)
+                ),
+                Optional(
+                        SpacingNoLF(),
+                        Action("exit"),
+                        Number()
+                )
         )
     }
 
@@ -80,6 +98,10 @@ open class ESParser : BaseParser<Any>() {
                 Action("if"),
                 IfBody()
         )
+    }
+
+    open fun Else(): Rule {
+        return Sequence(String("else"), Optional(Blank(), If()))
     }
 
     open fun IfBody(): Rule {
@@ -148,7 +170,7 @@ open class ESParser : BaseParser<Any>() {
                         "if", "else",
                         "set", "unset",
                         "echo", "fail",
-                        "send", "read", "copy", "call", "shell",
+                        "each", "send", "read", "copy", "call", "shell",
                         "find", "append", "insert", "replace", "permit",
                         "lines"),
                 Blank());
@@ -187,7 +209,7 @@ open class ESParser : BaseParser<Any>() {
     @SuppressSubnodes
     open fun Identifier(): Rule {
         return Sequence(
-                TestNot(Action()),
+                /*TestNot(Action()),*/
                 Letter(),
                 ZeroOrMore(LetterOrDigit()))
     }
@@ -239,8 +261,11 @@ open class ESParser : BaseParser<Any>() {
     open fun Spacing(): Rule = ZeroOrMore(AnyOf(SPACE_LF_CHARS).label("Spacing"))
 
     @SuppressSubnodes
+    open fun SpacingNoLF(): Rule = ZeroOrMore(AnyOf(SPACE_CHARS).label("SpacingNoLF"))
+
+    @SuppressSubnodes
     open fun Blank(): Rule = OneOrMore(AnyOf(SPACE_CHARS).label("Blank"))
-    
+
     @SuppressSubnodes
     open fun BlankMayLF(): Rule {
         return Sequence(
