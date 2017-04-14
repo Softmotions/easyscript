@@ -4,7 +4,6 @@ import org.parboiled.BaseParser
 import org.parboiled.Rule
 import org.parboiled.annotations.MemoMismatches
 import org.parboiled.annotations.SuppressSubnodes
-import org.parboiled.support.Chars
 
 /**
  * Easyscript parser.
@@ -18,28 +17,27 @@ open class ESParser : BaseParser<Any>() {
         val LF_CHARS = "\r\n"
         val SPACE_CHARS = " \t"
         val SPACE_LF_CHARS = "${SPACE_CHARS}${LF_CHARS}"
-        val SPACE_ALL_CHARS = "${SPACE_CHARS}${LF_CHARS}${Chars.INDENT}${Chars.DEDENT}"
     }
 
     open fun Script(): Rule {
         return Sequence(
-                Spacing(),
+                Spacing().suppressNode(),
                 FirstBlock(),
-                Spacing())
+                Spacing().suppressNode())
     }
 
     open fun FirstBlock(): Rule {
         return Sequence(
                 BlockCore().label("FirstBlock::BlockCore"),
-                FirstOf(Block().label("FirstBlock::Block"), Sequence(SpacingAll(), EOI))
+                FirstOf(Block().label("FirstBlock::Block"), Sequence(SpacingAll(), EOI).suppressNode())
         )
     }
 
     open fun Block(): Rule {
         return Sequence(
-                FirstOf(IndentDedent(), Spacing()),
+                FirstOf(IndentDedent(), Spacing().suppressNode()),
                 BlockCore(),
-                FirstOf(Block(), Sequence(SpacingAll(), EOI))
+                FirstOf(Block(), Sequence(SpacingAll(), EOI).suppressNode())
         )
     }
 
@@ -54,7 +52,7 @@ open class ESParser : BaseParser<Any>() {
                 Fail()
         )
     }
-    
+
     open fun Fail(): Rule {
         return Sequence(
                 Action("fail"),
@@ -63,7 +61,7 @@ open class ESParser : BaseParser<Any>() {
                                 StringDoubleQuoted() /* todo call */)
                 ),
                 Optional(
-                        SpacingNoLF(),
+                        SpacingNoLF().suppressNode(),
                         Action("exit"),
                         Number()
                 )
@@ -80,16 +78,16 @@ open class ESParser : BaseParser<Any>() {
     open fun Set(): Rule {
         return Sequence(
                 Action("set"),
-                Optional(Sequence("env", Blank())).label("Env"),
+                Optional(Sequence("env", Blank().suppressNode())).label("Env"),
                 Identifier(),
-                Blank(),
+                Blank().suppressNode(),
                 Data())
     }
 
     open fun Unset(): Rule {
         return Sequence(
                 Action("unset"),
-                Optional(Sequence("env", Blank())).label("Env"),
+                Optional(Sequence("env", Blank().suppressNode())).label("Env"),
                 Identifier())
     }
 
@@ -101,7 +99,7 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun Else(): Rule {
-        return Sequence(String("else"), Optional(Blank(), If()))
+        return Sequence(String("else"), Optional(Blank().suppressNode(), If()))
     }
 
     open fun IfBody(): Rule {
@@ -123,14 +121,33 @@ open class ESParser : BaseParser<Any>() {
                 Optional(Is()),
                 Optional(Not()),
                 FilePredicate(),
-                Blank(),
+                Blank().suppressNode(),
                 Data()
         )
     }
 
+    open fun IfCompare(): Rule {
+        return Sequence(
+                AtomicData(),
+                SpacingNoLF().suppressNode(),
+                CompareOp(),
+                SpacingNoLF().suppressNode(),
+                AtomicData()
+        )
+    }
+
+    open fun CompareOp(): Rule {
+        return FirstOf(
+                '=',
+                "<=",
+                ">="
+        )
+    }
+
+
     open fun FilePredicate(): Rule {
         return Sequence(
-                Blank(),
+                Blank().suppressNode(),
                 FirstOf(
                         "exists",
                         "exec",
@@ -139,28 +156,25 @@ open class ESParser : BaseParser<Any>() {
                 ))
     }
 
-    open fun IfCompare(): Rule {
-        return NOTHING
-    }
 
     open fun Is(): Rule {
-        return Sequence(Blank(), String("is"));
+        return Sequence(Blank().suppressNode(), String("is"));
     }
 
     open fun Not(): Rule {
-        return Sequence(Blank(), String("not"));
+        return Sequence(Blank().suppressNode(), String("not"));
     }
 
     open fun JoinAnd(): Rule {
-        return Sequence(BlankMayLF(), String("and"), Blank());
+        return Sequence(BlankMayLF().suppressNode(), String("and"), Blank());
     }
 
     open fun JoinOr(): Rule {
-        return Sequence(BlankMayLF(), String("or"), Blank());
+        return Sequence(BlankMayLF().suppressNode(), String("or"), Blank());
     }
 
     open fun Action(name: String): Rule {
-        return Sequence(name, Blank());
+        return Sequence(name, Blank().suppressNode());
     }
 
     @MemoMismatches
@@ -173,7 +187,7 @@ open class ESParser : BaseParser<Any>() {
                         "each", "send", "read", "copy", "call", "shell",
                         "find", "append", "insert", "replace", "permit",
                         "lines"),
-                Blank());
+                Blank().suppressNode());
     }
 
     @SuppressSubnodes
@@ -196,12 +210,12 @@ open class ESParser : BaseParser<Any>() {
     open fun Array(): Rule {
         return Sequence(
                 '[',
-                Spacing(),
+                Spacing().suppressNode(),
                 Optional(
                         AtomicData(),
-                        ZeroOrMore(',', Spacing(), AtomicData())
+                        ZeroOrMore(',', Spacing().suppressNode(), AtomicData())
                 ),
-                Spacing(),
+                Spacing().suppressNode(),
                 ']'
         )
     }
@@ -255,16 +269,16 @@ open class ESParser : BaseParser<Any>() {
     open fun IndentDedentZeroOrMore(): Rule = ZeroOrMore(FirstOf(Indent(), Dedent()))
 
     @SuppressSubnodes
-    open fun SpacingAll(): Rule = ZeroOrMore(AnyOf(SPACE_ALL_CHARS).label("SpacingAll"))
+    open fun SpacingAll(): Rule = ZeroOrMore(FirstOf(AnyOf(SPACE_LF_CHARS), Indent(), Dedent()))
 
     @SuppressSubnodes
-    open fun Spacing(): Rule = ZeroOrMore(AnyOf(SPACE_LF_CHARS).label("Spacing"))
+    open fun Spacing(): Rule = ZeroOrMore(AnyOf(SPACE_LF_CHARS))
 
     @SuppressSubnodes
-    open fun SpacingNoLF(): Rule = ZeroOrMore(AnyOf(SPACE_CHARS).label("SpacingNoLF"))
+    open fun SpacingNoLF(): Rule = ZeroOrMore(AnyOf(SPACE_CHARS))
 
     @SuppressSubnodes
-    open fun Blank(): Rule = OneOrMore(AnyOf(SPACE_CHARS).label("Blank"))
+    open fun Blank(): Rule = OneOrMore(AnyOf(SPACE_CHARS))
 
     @SuppressSubnodes
     open fun BlankMayLF(): Rule {

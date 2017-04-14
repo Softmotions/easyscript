@@ -119,7 +119,20 @@ if file exists 'myfile2.txt'
 """
         }
 
-    }
+        parse {
+            """
 
+if A >= 'val'
+    echo 'One'
+    if A <= 'val2'
+        echo 'One2'
+        if `A` <= 'val3'
+            echo 'One3'
+        set V "foo"
+set env E `ls`
+"""
+        }
+
+    }
 
 }

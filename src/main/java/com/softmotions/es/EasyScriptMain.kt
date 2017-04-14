@@ -21,15 +21,15 @@ class EasyScriptMain {
     fun run(vararg args: String) {
 
         val data0 =             """
-if file not exists 'myfile.txt'
-    fail "Fail1"
 
-if file exists 'myfile2.txt'
-    fail 'Fail 2' exit 22
-
-if file exists 'myfile2.txt'
-    fail exit 33
-
+if A >= 'val'
+    echo 'One'
+    if A <= 'val2'
+        echo 'One2'
+        if `A` <= 'val3'
+            echo 'One3'
+        set V "foo"
+set env E `ls`
 """
 
 
