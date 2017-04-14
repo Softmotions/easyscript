@@ -59,6 +59,18 @@ set VAR0 test
 set VAR0 test
 """
         }
+        parse {
+            """
+if file exists 'myfile.txt'
+    echo 'Hello!'
+"""
+        }
+        parse {
+            """
+if file exists ['myfile.txt', "bar.txt"]
+    echo 'Hello!'
+"""
+        }
 
     }
 }

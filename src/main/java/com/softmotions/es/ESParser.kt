@@ -29,7 +29,7 @@ open class ESParser : BaseParser<Any>() {
     open fun FirstBlock(): Rule {
         return Sequence(
                 BlockCore().label("FirstBlock::Core"),
-                Optional(Block().label("FirstBlock::Block"))
+                FirstOf(Block().label("FirstBlock::Block"), BlankMayLF(), EOI)
         )
     }
 
@@ -37,13 +37,16 @@ open class ESParser : BaseParser<Any>() {
         return Sequence(
                 FirstOf(IndentDedent(), BlankWithLF()),
                 BlockCore(),
-                Optional(Block()),
+                FirstOf(Block(), BlankMayLF(), EOI),
                 Optional(IndentDedent())
         )
     }
 
-    @SuppressSubnodes
+    //@SuppressSubnodes
     open fun IndentDedent(): Rule = OneOrMore(FirstOf(Indent(), Dedent()))
+
+    //@SuppressSubnodes
+    open fun IndentDedentZeroOrMore(): Rule = ZeroOrMore(FirstOf(Indent(), Dedent()))
 
     @SuppressSubnodes
     open fun Indent(): Rule = Sequence(Spacing(), INDENT)
@@ -56,7 +59,15 @@ open class ESParser : BaseParser<Any>() {
         return FirstOf(
                 Set(),
                 Unset(),
-                If()
+                If(),
+                Echo()
+        )
+    }
+
+    open fun Echo(): Rule {
+        return Sequence(
+                Action("echo"),
+                Data()
         )
     }
 
@@ -79,10 +90,19 @@ open class ESParser : BaseParser<Any>() {
     open fun If(): Rule {
         return Sequence(
                 Action("if"),
-                Blank(),
+                IfBody()
+        )
+    }
+
+    open fun IfBody(): Rule {
+        return Sequence(
                 FirstOf(
                         IfFile(),
                         IfCompare()
+                ),
+                Optional(
+                        FirstOf(JoinAnd(), JoinOr()),
+                        IfBody()
                 )
         )
     }
@@ -91,9 +111,22 @@ open class ESParser : BaseParser<Any>() {
         return Sequence(
                 FirstOf("file", "dir", "link"),
                 Optional(Is()),
-                Optional(Not())
-
+                Optional(Not()),
+                FilePredicate(),
+                Blank(),
+                Data()
         )
+    }
+
+    open fun FilePredicate(): Rule {
+        return Sequence(
+                Blank(),
+                FirstOf(
+                        "exists",
+                        "exec",
+                        "readable",
+                        "writable"
+                ))
     }
 
     open fun IfCompare(): Rule {
@@ -106,6 +139,14 @@ open class ESParser : BaseParser<Any>() {
 
     open fun Not(): Rule {
         return Sequence(Blank(), String("not"));
+    }
+
+    open fun JoinAnd(): Rule {
+        return Sequence(BlankMayLF(), String("and"), Blank());
+    }
+
+    open fun JoinOr(): Rule {
+        return Sequence(BlankMayLF(), String("or"), Blank());
     }
 
     open fun Action(name: String): Rule {
@@ -191,28 +232,35 @@ open class ESParser : BaseParser<Any>() {
     open fun Digit(): Rule = CharRange('0', '9')
 
 
-    @SuppressSubnodes
+    //@SuppressSubnodes
     open fun Spacing(): Rule {
         return ZeroOrMore(AnyOf(SPACE_LF_CHARS).label("Spacing"))
     }
 
-    @SuppressSubnodes
+    //@SuppressSubnodes
     open fun SpacingNoLF(): Rule {
         return ZeroOrMore(AnyOf(SPACE_CHARS).label("SpacingNoLF"))
     }
 
-    @SuppressSubnodes
+    //@SuppressSubnodes
     open fun Blank(): Rule {
         return OneOrMore(AnyOf(SPACE_CHARS).label("Blank"))
     }
 
-    @SuppressSubnodes
+    //@SuppressSubnodes
     open fun BlankWithLF(): Rule {
         return OneOrMore(
                 Optional(AnyOf(SPACE_CHARS)),
                 AnyOf(LF_CHARS),
                 Optional(AnyOf(SPACE_CHARS))
         )
+    }
+
+    //@SuppressSubnodes
+    open fun BlankMayLF(): Rule {
+        return Sequence(
+                OneOrMore(AnyOf(SPACE_LF_CHARS).label("BlankMayLF")),
+                IndentDedentZeroOrMore())
     }
 
     open fun Escape(): Rule {
