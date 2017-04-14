@@ -7,7 +7,7 @@ import org.testng.annotations.Test
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
 @Test
-class BasicBlocks : BaseTest() {
+class TestBasicBlocks : BaseTest() {
 
     @BeforeClass
     override fun setup() {
@@ -26,7 +26,7 @@ class BasicBlocks : BaseTest() {
             """
 
     set env VAR01 `test`
-    set VAR [one, \"two\",99]
+    set VAR [one, "two",99]
 
 """
         }

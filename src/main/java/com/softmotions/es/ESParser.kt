@@ -4,6 +4,7 @@ import org.parboiled.BaseParser
 import org.parboiled.Rule
 import org.parboiled.annotations.MemoMismatches
 import org.parboiled.annotations.SuppressSubnodes
+import org.parboiled.support.Chars
 
 /**
  * Easyscript parser.
@@ -17,6 +18,7 @@ open class ESParser : BaseParser<Any>() {
         val LF_CHARS = "\r\n"
         val SPACE_CHARS = " \t"
         val SPACE_LF_CHARS = "${SPACE_CHARS}${LF_CHARS}"
+        val SPACE_ALL_CHARS = "${SPACE_CHARS}${LF_CHARS}${Chars.INDENT}${Chars.DEDENT}"
     }
 
     open fun Script(): Rule {
@@ -28,32 +30,18 @@ open class ESParser : BaseParser<Any>() {
 
     open fun FirstBlock(): Rule {
         return Sequence(
-                BlockCore().label("FirstBlock::Core"),
-                FirstOf(Block().label("FirstBlock::Block"), BlankMayLF(), EOI)
+                BlockCore().label("FirstBlock::BlockCore"),
+                FirstOf(Block().label("FirstBlock::Block"), Sequence(SpacingAll(), EOI))
         )
     }
 
     open fun Block(): Rule {
         return Sequence(
-                FirstOf(IndentDedent(), BlankWithLF()),
+                FirstOf(IndentDedent(), Spacing()),
                 BlockCore(),
-                FirstOf(Block(), BlankMayLF(), EOI),
-                Optional(IndentDedent())
+                FirstOf(Block(), Sequence(SpacingAll(), EOI))
         )
     }
-
-    //@SuppressSubnodes
-    open fun IndentDedent(): Rule = OneOrMore(FirstOf(Indent(), Dedent()))
-
-    //@SuppressSubnodes
-    open fun IndentDedentZeroOrMore(): Rule = ZeroOrMore(FirstOf(Indent(), Dedent()))
-
-    @SuppressSubnodes
-    open fun Indent(): Rule = Sequence(Spacing(), INDENT)
-
-    @SuppressSubnodes
-    open fun Dedent(): Rule = Sequence(Spacing(), DEDENT)
-
 
     open fun BlockCore(): Rule {
         return FirstOf(
@@ -232,34 +220,31 @@ open class ESParser : BaseParser<Any>() {
     open fun Digit(): Rule = CharRange('0', '9')
 
 
-    //@SuppressSubnodes
-    open fun Spacing(): Rule {
-        return ZeroOrMore(AnyOf(SPACE_LF_CHARS).label("Spacing"))
-    }
+    @SuppressSubnodes
+    open fun Indent(): Rule = Sequence(Spacing(), INDENT)
 
-    //@SuppressSubnodes
-    open fun SpacingNoLF(): Rule {
-        return ZeroOrMore(AnyOf(SPACE_CHARS).label("SpacingNoLF"))
-    }
+    @SuppressSubnodes
+    open fun Dedent(): Rule = Sequence(Spacing(), DEDENT)
 
-    //@SuppressSubnodes
-    open fun Blank(): Rule {
-        return OneOrMore(AnyOf(SPACE_CHARS).label("Blank"))
-    }
+    @SuppressSubnodes
+    open fun IndentDedent(): Rule = OneOrMore(FirstOf(Indent(), Dedent()))
 
-    //@SuppressSubnodes
-    open fun BlankWithLF(): Rule {
-        return OneOrMore(
-                Optional(AnyOf(SPACE_CHARS)),
-                AnyOf(LF_CHARS),
-                Optional(AnyOf(SPACE_CHARS))
-        )
-    }
+    @SuppressSubnodes
+    open fun IndentDedentZeroOrMore(): Rule = ZeroOrMore(FirstOf(Indent(), Dedent()))
 
-    //@SuppressSubnodes
+    @SuppressSubnodes
+    open fun SpacingAll(): Rule = ZeroOrMore(AnyOf(SPACE_ALL_CHARS).label("SpacingAll"))
+
+    @SuppressSubnodes
+    open fun Spacing(): Rule = ZeroOrMore(AnyOf(SPACE_LF_CHARS).label("Spacing"))
+
+    @SuppressSubnodes
+    open fun Blank(): Rule = OneOrMore(AnyOf(SPACE_CHARS).label("Blank"))
+    
+    @SuppressSubnodes
     open fun BlankMayLF(): Rule {
         return Sequence(
-                OneOrMore(AnyOf(SPACE_LF_CHARS).label("BlankMayLF")),
+                OneOrMore(AnyOf(SPACE_LF_CHARS)),
                 IndentDedentZeroOrMore())
     }
 

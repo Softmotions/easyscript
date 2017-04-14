@@ -20,9 +20,16 @@ class EasyScriptMain {
 
     fun run(vararg args: String) {
 
-        val data0 = """
-if file exists 'foo.txt'
-    ssss 'Hello!!!'
+        val data0 =             """
+
+    set env VAR01 `test`
+        set VAR [one, "two",99]
+            set VAR [one, "two1",991]
+
+        set VAR [qqq, "two1",991]
+
+    set VAR [qqq, "two1",weww]
+
 """
 
 
