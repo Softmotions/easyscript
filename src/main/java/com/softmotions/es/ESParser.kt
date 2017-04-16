@@ -51,14 +51,30 @@ open class ESParser : BaseParser<Any>() {
                 Else(),
                 Fail(),
                 RunBlock(),
-                Shell()
+                Shell(),
+                Send(),
+                Each()
         )
     }
 
-    open fun RunBlock(): Rule {
+    open fun Each(): Rule {
+        return Sequence(Action("each"),
+                Identifier(),
+                Blank(),
+                "in",
+                Blank(),
+                Optional("read", Blank().suppressNode()),
+                Data(),
+                Optional(Blank(), As())
+        )
+    }
+
+    open fun RunBlock(): Rule = Run()
+
+    open fun Echo(): Rule {
         return Sequence(
-                Optional("lines", Blank()),
-                Run()
+                Action("echo"),
+                Data()
         )
     }
 
@@ -68,6 +84,18 @@ open class ESParser : BaseParser<Any>() {
                 Data()
         )
     }
+
+    open fun Send(): Rule {
+        return Sequence(
+                Action("send"),
+                FirstOf(Shell(), AtomicData()),
+                SpacingNoLF(),
+                FirstOf(">>", '>'),
+                SpacingNoLF(),
+                Data()
+        )
+    }
+
 
     open fun Fail(): Rule {
         return Sequence(
@@ -85,20 +113,16 @@ open class ESParser : BaseParser<Any>() {
         )
     }
 
-    open fun Echo(): Rule {
-        return Sequence(
-                Action("echo"),
-                Data()
-        )
-    }
-
     open fun Set(): Rule {
         return Sequence(
                 Action("set"),
                 Optional(Sequence("env", Blank().suppressNode())).label("Env"),
                 Identifier(),
                 Blank().suppressNode(),
-                Data())
+                Optional("read", Blank().suppressNode()),
+                Data(),
+                Optional(Blank(), As())
+        )
     }
 
     open fun Unset(): Rule {
@@ -106,6 +130,16 @@ open class ESParser : BaseParser<Any>() {
                 Action("unset"),
                 Optional(Sequence("env", Blank().suppressNode())).label("Env"),
                 Identifier())
+    }
+
+
+    open fun As(): Rule {
+        return Sequence(
+                "as",
+                Blank(),
+                "lines",
+                SpacingNoLF()
+        )
     }
 
     open fun If(): Rule {
@@ -123,12 +157,29 @@ open class ESParser : BaseParser<Any>() {
         return Sequence(
                 FirstOf(
                         IfFile(),
-                        IfCompare()
+                        IfCompare(),
+                        IfIn()
                 ),
                 Optional(
                         FirstOf(JoinAnd(), JoinOr()),
                         IfBody()
                 )
+        )
+    }
+
+    open fun IfIn(): Rule {
+        return Sequence(
+                AtomicData(),
+                Blank(),
+                Optional("not", Blank()),
+                "in",
+                Blank(),
+                FirstOf(
+                        Array(),
+                        Sequence("read", Blank(), Data(),
+                                Optional(Blank(), As()))
+                )
+
         )
     }
 
@@ -160,7 +211,6 @@ open class ESParser : BaseParser<Any>() {
                 ">="
         )
     }
-
 
     open fun FilePredicate(): Rule {
         return Sequence(
@@ -200,10 +250,9 @@ open class ESParser : BaseParser<Any>() {
                 FirstOf(
                         "if", "else",
                         "set", "unset",
-                        "echo", "fail",
-                        "each", "send", "read", "copy", "call", "shell",
-                        "find", "append", "insert", "replace", "permit",
-                        "lines"),
+                        "echo", "fail", "send",
+                        "each", "read", "call", "shell",
+                        "as", "lines"),
                 Blank().suppressNode());
     }
 
@@ -241,7 +290,7 @@ open class ESParser : BaseParser<Any>() {
     @SuppressSubnodes
     open fun Identifier(): Rule {
         return Sequence(
-                /*TestNot(Action()),*/
+                TestNot(Action()),
                 Letter(),
                 ZeroOrMore(LetterOrDigit()))
     }

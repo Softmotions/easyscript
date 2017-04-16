@@ -25,7 +25,8 @@ class EasyScriptMain {
     fun run(vararg args: String) {
 
         val data0 = """
-lines `ps -Af`
+each myvar in `cat ./myfile.txt` as lines
+    echo myvar
 """
 
 

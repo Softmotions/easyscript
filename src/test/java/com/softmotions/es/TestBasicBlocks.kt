@@ -66,6 +66,13 @@ set VAR0 test
 set VAR0 test
 """
         }
+        
+        parse {
+            """
+set MYVAR1 read 'myfile' as lines
+"""
+        }
+
         parse {
             """
 if file exists 'myfile.txt'
@@ -163,6 +170,12 @@ multi line $TQ  ]
 """
         }
 
+        parse {
+            """
+set MYVAR1 `cat /etc/passwd` as lines
+"""
+        }
+
 
         parse {
             """
@@ -183,7 +196,86 @@ $TQ
 
         parse {
             """
-lines `ps -Af`
+`ps -Af`
+"""
+        }
+
+        parse {
+            """
+send `ps -Af` >> ['myfile.txt', 'myfile2.txt']
+"""
+        }
+
+        parse {
+            """
+send $TQ My multi
+line text
+    $TQ > 'file.txt'
+"""
+        }
+
+        parse {
+            """
+send shell $TQ My multi
+line text
+    $TQ > 'file.txt'
+"""
+        }
+
+        parse {
+            """
+if VAR in ['one', 'two', "three"]
+    echo "Hello!!!"
+"""
+        }
+
+        parse {
+            """
+if VAR not in ['one', 'two', "three"]
+    echo "Hello!!!"
+"""
+        }
+
+        parse {
+            """
+if VAR in ['one', 'two', "three"] and ZZ = 'test'
+    or BV in ["bvq"]
+    echo "Hello!!!"
+"""
+        }
+
+        parse {
+            """
+if 'test' in read 'myfile' as lines
+    echo "Yes"
+"""
+        }
+
+        parse {
+            """
+if 'test' in read ['myfile', 'myfile2']
+    echo "Yes"
+"""
+        }
+
+        parse {
+            """
+each myline in ['foo', "bar", 1213]
+    echo myline
+"""
+        }
+
+        parse {
+            """
+each myline in read '/etc/passwd'
+    echo "line={myline}"
+"""
+        }
+
+        parse {
+            """
+each myvar in `cat ./myfile.txt` as lines
+    echo myvar
 """
         }
 

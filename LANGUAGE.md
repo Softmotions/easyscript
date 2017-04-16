@@ -28,8 +28,7 @@ Words:
 ### Variables
 
     <varname>: [a-zA-Z][a-zA-Z0-9]*
-    <set|env> <varname> <literal|array|run>
-    <read|lines|find|run> as <varname>
+    <set|env> <varname> <literal|array|run> [as lines]
     <varname> <write>
 
 ### if
@@ -44,21 +43,29 @@ Words:
 
 run command `true` if exit code is not zero
 
-    [lines] `<command>` [write]
+    `<command>`
         <body|fail handler>
 
 ### Fail handler
 
     fail [string|call] [exit <code>] 
     <echo> 
-    
-### Read
-    
-    read [lines] <file> [as <varname>]
-    
+        
 ### Write
     
-    > [append|insert|replace] <file>
+    send "simple string" >> myfile
+
+    send """ This is my text
+        Next line
+    """ > 'myfile.txt'
+    
+    send `ls -al` >> 'myfile'
+    
+    send shell """
+        some text 
+    """ > file
+    
+    
     
 ### Find
 
@@ -154,16 +161,13 @@ set env MYENV "Var"     # Set environment variable MYENV
 set MYVAR 1             # Set local variable 
 set MYVAR 22
 
-read file.txt as VAR > append file.txt   # Read file into variable VAR and copy its data to file.txt
-read lines file.txt as MyVar             # Read file into variable MyVar
-lines `cmd` as MyVar                     # Executed comand cmd and parse output as lines
+set VA1 `cat ./myfile.txt` as lines
 
 
-append """ Some multiline text 
-            with {VAR} """ > file.txt
+send """ Some multiline text 
+            with {VAR} """ >> 'file.txt'  # Append
            
-"Simple string" > file.txt              #  Replace file data with "Simple string"
-append "Simple string" > file.txt       # Append to end of file
+send "Simple string" > file.txt           # Replace file data with "Simple string"
     
    
 find /regexp/ in {VAR} as FOUND
@@ -179,9 +183,7 @@ shell """
     ;l;l
     END
 """
-    
-copy dir/**/f?le* <target>
- 
+     
 permit group read write > <file>
 permit 677 > <file>
 
@@ -192,14 +194,14 @@ if arg3 in ["one", "two", "free"]
     echo Hello
     
 each myvar in ["foo", "bar"]
-    append myvar > file.txt 
+    send myvar > file.txt 
     
     
-set printhelp(foo, bar)
+fun printhelp(foo, bar)
     echo "This is a help of {foo} {bar}"
     
 
-printhelp [read file.txt, lines]
+printhelp(read file.txt, lines)
 
 
 ```
