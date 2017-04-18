@@ -3,7 +3,9 @@ package com.softmotions.es.ast
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-abstract class ESNode(var parent: Block<*>? = null) {
+abstract class ESNode {
+
+    var parent: Block<*>? = null
 
     protected val ctx by lazy(LazyThreadSafetyMode.NONE, {
         HashMap<String, Any>()

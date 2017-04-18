@@ -12,7 +12,7 @@ enum class ValueType {
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-data class TypedValue(val type: ValueType, val value: String) : ESNode(null) {
+data class TypedValue(val type: ValueType, val value: String) : ESNode() {
 
     companion object {
 

@@ -3,7 +3,7 @@ package com.softmotions.es.ast
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-abstract class Block<T : ESNode>(parent: Block<*>? = null) : ESNode(parent) {
+abstract class Block<T : ESNode> : ESNode() {
 
     val children = ArrayList<T>()
 

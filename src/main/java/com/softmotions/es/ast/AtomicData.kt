@@ -5,8 +5,7 @@ package com.softmotions.es.ast
  *
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-class AtomicData(val value: TypedValue,
-                 parent: Block<*>? = null) : ESNode(parent) {
+class AtomicData(val value: TypedValue) : ESNode() {
 
     override fun toString(): String {
         return "AtomicData(" +
