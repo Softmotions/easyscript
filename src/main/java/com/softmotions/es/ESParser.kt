@@ -1,5 +1,6 @@
 package com.softmotions.es
 
+import com.softmotions.es.ast.TypedValue
 import org.parboiled.BaseParser
 import org.parboiled.Rule
 import org.parboiled.annotations.MemoMismatches
@@ -292,15 +293,25 @@ open class ESParser : BaseParser<Any>() {
         return Sequence(
                 TestNot(Action()),
                 Letter(),
-                ZeroOrMore(LetterOrDigit()))
+                ZeroOrMore(LetterOrDigit()),
+                push(TypedValue.identifier(match()))
+        )
     }
 
     @SuppressSubnodes
-    open fun Number(): Rule = OneOrMore(Digit())
+    open fun Number(): Rule {
+        return Sequence(
+                OneOrMore(Digit()),
+                push(TypedValue.number(match()))
+        )
+    }
 
     @SuppressSubnodes
     open fun Run(): Rule {
-        return Quoted("Run", '`')
+        return Sequence(
+                Quoted("Run", '`'),
+                push(TypedValue.run(match()))
+        )
     }
 
     open fun StringMultiQuoted(): Rule {
@@ -310,19 +321,26 @@ open class ESParser : BaseParser<Any>() {
                 ZeroOrMore(
                         Sequence(TestNot(AnyOf(quoteChar)), ANY)
                 ),
-                quoteChar
+                quoteChar,
+                push(TypedValue.mquoted(match()))
         ).suppressSubnodes();
     }
 
 
     @SuppressSubnodes
     open fun StringDoubleQuoted(): Rule {
-        return Quoted("StringDoubleQuoted", '"')
+        return Sequence(
+                Quoted("StringDoubleQuoted", '"'),
+                push(TypedValue.dquoted(match()))
+        )
     }
 
     @SuppressSubnodes
     open fun StringSingleQuoted(): Rule {
-        return Quoted("StringSingleQuoted", '\'')
+        return Sequence(
+                Quoted("StringSingleQuoted", '\''),
+                push(TypedValue.squoted(match()))
+        )
     }
 
     @MemoMismatches
