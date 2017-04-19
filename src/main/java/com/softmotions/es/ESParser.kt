@@ -19,6 +19,7 @@ open class ESParser : BaseParser<Any>() {
     val log = LoggerFactory.getLogger(ESParser::class.java)
 
     companion object {
+        val LF_CHAR = '\n'
         val LF_CHARS = "\r\n"
         val SPACE_CHARS = " \t"
         val SPACE_LF_CHARS = "${SPACE_CHARS}${LF_CHARS}"
@@ -59,7 +60,10 @@ open class ESParser : BaseParser<Any>() {
 
     open fun Block(): Rule {
         return Sequence(
-                FirstOf(IndentDedent(), Spacing().suppressNode()),
+                SpacingNoLF(),
+                OneOrMore(AnyOf(LF_CHARS)),
+                Optional(IndentDedent()),
+                Spacing(),
                 BlockCore(),
                 FirstOf(Block(), Sequence(SpacingAll(), EOI).suppressNode())
         )
@@ -92,9 +96,7 @@ open class ESParser : BaseParser<Any>() {
                 Blank(),
                 "in",
                 Blank(),
-                Optional("read", Blank().suppressNode()),
-                Data(),
-                Optional(Blank(), As())
+                Optional(ReadAs())
         )
     }
 
@@ -105,7 +107,7 @@ open class ESParser : BaseParser<Any>() {
                 Action("echo"),
                 Data(),
                 action {
-                    push(AstEcho(pop() as Data))
+                    push(AstEcho(pop() as AstData))
                 }
         )
     }
@@ -151,9 +153,7 @@ open class ESParser : BaseParser<Any>() {
                 Optional(Sequence("env", Blank().suppressNode())).label("Env"),
                 Identifier(),
                 Blank().suppressNode(),
-                Optional("read", Blank().suppressNode()),
-                Data(),
-                Optional(Blank(), As())
+                Optional(ReadAs())
         )
     }
 
@@ -166,15 +166,19 @@ open class ESParser : BaseParser<Any>() {
 
 
     open fun As(): Rule {
+        val vnode = Var<ReadAs>(ReadAs.DEFAULT)
         return Sequence(
                 "as",
                 Blank(),
                 "lines",
-                SpacingNoLF()
+                vnode.set(ReadAs.LINES),
+                SpacingNoLF(),
+                push(vnode.get())
         )
     }
 
     open fun If(): Rule {
+        // todo
         return Sequence(
                 Action("if"),
                 BooleanExp()
@@ -182,11 +186,12 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun Else(): Rule {
+        // todo
         return Sequence(String("else"), Optional(Blank().suppressNode(), If()))
     }
 
     open fun BooleanExp(): Rule {
-        val exp = Var<AstBooleanBlock>()
+        val vnode = Var<AstBooleanBlock>()
         return Sequence(
                 // todo handle NOT
                 Sequence(FirstOf(
@@ -194,7 +199,7 @@ open class ESParser : BaseParser<Any>() {
                         IfCompare(),
                         IfIn()),
                         action {
-                            exp.set(pop() as AstBooleanBlock)
+                            vnode.set(pop() as AstBooleanBlock)
                         }
                 ),
                 Optional(
@@ -203,36 +208,41 @@ open class ESParser : BaseParser<Any>() {
                         action {
                             val nexp = pop() as AstBooleanBlock
                             nexp.join = pop() as BooleanBlockJoin
-                            exp.get().addChildren(nexp)
+                            vnode.get().addChildren(nexp)
                         }
                 ),
-                push(exp)
+                push(vnode.get())
         )
     }
 
     open fun IfIn(): Rule {
-        // todo
+        val node = AstInBooleanNode()
         return Sequence(
                 AtomicData(),
                 Blank(),
-                Optional("not", Blank()),
+                Optional("not", Blank(), action {
+                    node.negate = !node.negate
+                }),
                 "in",
                 Blank(),
                 FirstOf(
                         ArrayData(),
-                        Sequence("read", Blank(), Data(),
-                                Optional(Blank(), As()))
-                )
+                        ReadAs()
+                ),
+                action {
+                    node.addChildren(pop() as AstNode)
+                    push(node)
+                }
         )
     }
 
     open fun IfFile(): Rule {
-        val bb = AstFileBooleanBlock()
+        val node = AstFileBooleanNode()
         return Sequence(
                 Sequence(FirstOf(
                         "file", "dir", "link"),
                         action {
-                            bb.type = when (match()) {
+                            node.type = when (match()) {
                                 "file" -> AstFileType.FILE
                                 "dir" -> AstFileType.DIR
                                 "link" -> AstFileType.LINK
@@ -241,37 +251,55 @@ open class ESParser : BaseParser<Any>() {
                         }),
                 Optional(Is()),
                 Optional(Not(), action {
-                    bb.negate = bb.negate.not()
+                    node.negate = node.negate.not()
                 }),
                 FilePredicate(),
                 action {
-                    bb.predicate = pop() as AstFilePredicate
+                    node.predicate = pop() as AstFilePredicate
                 },
                 Blank().suppressNode(),
                 Data(),
                 action {
-                    bb.data = pop() as Data
-                    push(bb)
+                    node.data = pop() as AstData
+                    push(node)
                 }
         )
     }
 
     open fun IfCompare(): Rule {
-        // todo
+        val node = AstCompareBooleanBlock()
         return Sequence(
                 AtomicData(),
+                node.addChildren(pop() as AstAtomicData),
                 SpacingNoLF().suppressNode(),
                 CompareOp(),
+                action {
+                    node.op = pop() as AstCompareOp
+                },
                 SpacingNoLF().suppressNode(),
-                AtomicData()
+                AtomicData(),
+                node.addChildren(pop() as AstAtomicData),
+                push(node)
         )
     }
 
     open fun CompareOp(): Rule {
-        return FirstOf(
+        return Sequence(FirstOf(
                 '=',
                 "<=",
-                ">="
+                ">=",
+                '>',
+                '<'),
+                action {
+                    push(when (match()) {
+                        "=" -> AstCompareOp.EQ
+                        "<=" -> AstCompareOp.LTE
+                        ">=" -> AstCompareOp.GTE
+                        "<" -> AstCompareOp.LT
+                        ">" -> AstCompareOp.GT
+                        else -> error("CompareOp")
+                    })
+                }
         )
     }
 
@@ -327,6 +355,27 @@ open class ESParser : BaseParser<Any>() {
                         "each", "read", "call", "shell",
                         "as", "lines"),
                 Blank().suppressNode());
+    }
+
+    @SuppressSubnodes
+    open fun ReadAs(): Rule {
+        val node = AstRead()
+        return Sequence(
+                "read",
+                Blank().suppressNode(),
+                Data(),
+                action {
+                    node.data = pop() as AstData
+                },
+                Optional(
+                        Blank().suppressNode(),
+                        As(),
+                        action {
+                            node.readAs = pop() as ReadAs
+                        }
+                ),
+                push(node)
+        )
     }
 
     @SuppressSubnodes

@@ -5,7 +5,7 @@ package com.softmotions.es.ast
  *
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-class AstAtomicData(val value: TypedValue) : AstNode(), Data {
+class AstAtomicData(val value: TypedValue) : AstNode(), AstData {
 
     override fun toString(): String {
         return "AstAtomicData(" +

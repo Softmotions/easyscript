@@ -5,7 +5,7 @@ package com.softmotions.es.ast
  *
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-class AstEcho(val data: Data) : AstNode() {
+class AstEcho(val data: AstData) : AstNode() {
     
     override fun toString(): String {
         return "AstEcho(data=$data)"

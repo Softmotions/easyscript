@@ -1,5 +1,6 @@
 package com.softmotions.es.ast
 
+
 enum class BooleanBlockJoin {
     NONE,
     AND,
@@ -19,25 +20,32 @@ enum class AstFilePredicate {
     WRITABLE
 }
 
-/**
- * @author Adamansky Anton (adamansky@softmotions.com)
- */
+enum class AstCompareOp {
+    EQ,
+    LTE,
+    GTE,
+    GT,
+    LT
+}
+
 open class AstBooleanBlock : AstBlock() {
     var join = BooleanBlockJoin.NONE
     var negate = false
 }
 
-class AstFileBooleanBlock() : AstBooleanBlock() {
+class AstFileBooleanNode : AstBooleanBlock() {
     var type: AstFileType = AstFileType.FILE
     var predicate: AstFilePredicate = AstFilePredicate.EXISTS
-    var data: Data = Data.EMPTY
+    var data: AstData = AstEmptyData()
+}
+
+class AstInBooleanNode : AstBooleanBlock() {
+
 }
 
 class AstCompareBooleanBlock : AstBooleanBlock() {
-
+   var op = AstCompareOp.EQ
 }
 
-class AstInBooleanBlock : AstBooleanBlock() {
 
-}
 

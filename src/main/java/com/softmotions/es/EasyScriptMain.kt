@@ -25,7 +25,13 @@ class EasyScriptMain {
     fun run() {
 
         val data0 = """
-echo "AAA"
+if file exists 'myfile'
+    echo 'AAA'
+    if 1 in [1,2]
+        echo 'CCC'
+    else
+        echo 'DDD'
+else
     echo 'BBB'
 """
 
