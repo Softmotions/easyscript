@@ -22,11 +22,11 @@ class EasyScriptMain {
         }
     }
 
-    fun run(vararg args: String) {
+    fun run() {
 
         val data0 = """
-each myvar in `cat ./myfile.txt` as lines
-    echo myvar
+echo "AAA"
+    echo 'BBB'
 """
 
 
@@ -45,7 +45,7 @@ each myvar in `cat ./myfile.txt` as lines
 //    fail "Oops.." exit 1
 //"""
         val data = data0;
-        val parser = Parboiled.createParser(ESPTreeParser::class.java);
+        val parser = Parboiled.createParser(ESParser::class.java);
 
 //        val result = ReportingParseRunner<Any>(parser.Sript())
 //                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))

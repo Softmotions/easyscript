@@ -114,6 +114,15 @@ else
 
         parse {
             """
+if file exists 'myfile.txt'
+    echo 'One'
+    if file exists 'myfile2.txt'
+        echo 'Three'
+"""
+        }
+
+        parse {
+            """
 if file not exists 'myfile.txt'
     fail "Fail1"
 

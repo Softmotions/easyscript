@@ -3,19 +3,19 @@ package com.softmotions.es.ast
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-abstract class ESNode {
+abstract class AstNode {
 
-    var parent: Block<*>? = null
+    var parent: AstBlock? = null
 
     protected val ctx by lazy(LazyThreadSafetyMode.NONE, {
         HashMap<String, Any>()
     })
 
     fun put(key: String, value: Any) {
-        ctx.put(key, value);
+        ctx[key] = value
     }
 
     fun get(key: String): Any? {
-        return ctx.get(key);
+        return ctx[key]
     }
 }

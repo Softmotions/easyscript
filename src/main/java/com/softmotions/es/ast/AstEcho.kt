@@ -1,13 +1,13 @@
 package com.softmotions.es.ast
 
 /**
- * Echo operation.
+ * AstEcho operation.
  *
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-class Echo(val data: AtomicData) : ESNode() {
-
+class AstEcho(val data: Data) : AstNode() {
+    
     override fun toString(): String {
-        return "Echo(data=$data)"
+        return "AstEcho(data=$data)"
     }
 }

@@ -5,10 +5,10 @@ package com.softmotions.es.ast
  *
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-class AtomicData(val value: TypedValue) : ESNode() {
+class AstAtomicData(val value: TypedValue) : AstNode(), Data {
 
     override fun toString(): String {
-        return "AtomicData(" +
+        return "AstAtomicData(" +
                 "value='$value'" +
                 ")"
     }
