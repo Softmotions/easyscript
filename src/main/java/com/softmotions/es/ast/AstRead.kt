@@ -8,6 +8,9 @@ enum class ReadAs {
 
 class AstRead : AstNode() {
 
+    override val name: String
+        get() = "read expression"
+    
     var readAs = ReadAs.DEFAULT
 
     var data: AstData = AstEmptyData()

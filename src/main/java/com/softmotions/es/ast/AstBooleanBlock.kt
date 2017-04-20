@@ -29,6 +29,8 @@ enum class AstCompareOp {
 }
 
 open class AstBooleanBlock : AstBlock() {
+    override val name: String
+        get() = "boolean expression"
     var join = BooleanBlockJoin.NONE
     var negate = false
 }

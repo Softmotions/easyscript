@@ -178,16 +178,26 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun If(): Rule {
-        // todo
+        val vindent = Var<Int>(0)
         return Sequence(
                 Action("if"),
-                BooleanExp()
+                vindent.set(script.indent),
+                BooleanExp(),
+                action {
+                    val bb = pop() as AstBooleanBlock
+                    push(AstIf(vindent.get(), bb))
+                }
         )
     }
-
+    
     open fun Else(): Rule {
-        // todo
-        return Sequence(String("else"), Optional(Blank().suppressNode(), If()))
+        val vindent = Var<Int>(0)
+        return Sequence(
+                String("else"),
+                vindent.set(script.indent),
+                Optional(Blank(), If())
+                // todo
+        )
     }
 
     open fun BooleanExp(): Rule {
@@ -491,12 +501,26 @@ open class ESParser : BaseParser<Any>() {
     @SuppressSubnodes
     open fun Indent(): Rule = Sequence(Spacing(), INDENT, action {
         log.info("!!!INDENT")
+        val s = this.script
+        s.indent()
     })
 
     @SuppressSubnodes
     open fun Dedent(): Rule = Sequence(Spacing(), DEDENT, action {
         log.info("!!!DEDENT") // todo
-
+        val s = this.script
+        s.dedent()
+        val node = peek()
+        if (node is AstIndentBlock && node.indent == s.indent) {
+            pop()
+            val parent = peek();
+            if (parent is AstBlock) {
+                parent.addChildren(node)
+            } else {
+                parent as AstNode
+                error("The '${parent.name}' is not a block")
+            }
+        }
     })
 
     @SuppressSubnodes

@@ -7,5 +7,6 @@ package com.softmotions.es.ast
  */
 class AstArrayData : AstBlock(), AstData {
 
-
+    override val name: String
+        get() = "array"
 }

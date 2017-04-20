@@ -14,6 +14,9 @@ enum class ValueType {
  */
 data class TypedValue(val type: ValueType, val value: String) : AstNode() {
 
+    override val name: String
+        get() = "typed value"
+
     companion object {
 
         fun identifier(value: String): TypedValue = TypedValue(ValueType.IDENTIFIER, value.trim())
