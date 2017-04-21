@@ -248,6 +248,7 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun Else(): Rule {
+
         return Sequence(
                 String("else"),
                 Optional(Blank(), If())
@@ -509,6 +510,7 @@ open class ESParser : BaseParser<Any>() {
         )
     }
 
+    @SuppressSubnodes
     open fun StringMultiQuoted(): Rule {
         val quoteChar = "\"\"\"";
         return Sequence(
@@ -578,10 +580,10 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun Escape(): Rule {
-        return Sequence('\\', AnyOf("btnfr\"\'\\"))
+        return Sequence('\\', AnyOf("btnfr\"\'`\\"))
     }
 
-    ///////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////s///////////////////////////////////////
     //                            Helpers                                    //
     ///////////////////////////////////////////////////////////////////////////
 

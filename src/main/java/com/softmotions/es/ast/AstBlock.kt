@@ -4,17 +4,14 @@ package com.softmotions.es.ast
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
 abstract class AstBlock : AstNode() {
-
-
+    
     val children: MutableList<AstNode> by lazy(LazyThreadSafetyMode.NONE, {
         ArrayList<AstNode>()
     })
-
-
+    
     fun lastChild(): AstNode {
         return children.last()
     }
-
 
     fun addChild(node: AstNode): Boolean {
         log.info("ADD CHILD: $node INTO ${javaClass.simpleName}")
@@ -30,4 +27,5 @@ abstract class AstBlock : AstNode() {
         return true
     }
 
+    fun toStringChildren(): String = "${javaClass.simpleName}.children=${children}"
 }

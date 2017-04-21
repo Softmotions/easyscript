@@ -39,9 +39,8 @@ class AstFileBooleanNode(val type: AstFileType) : AstBooleanBlock() {
     var predicate: AstFilePredicate = AstFilePredicate.EXISTS
     var data: AstData = AstEmptyData()
     override fun toString(): String {
-        return "AstFileBooleanNode(type=$type, predicate=$predicate, data=$data, bchildren=$children)"
+        return "AstFileBooleanNode(type=$type, predicate=$predicate, data=$data, ${toStringChildren()}"
     }
-
 }
 
 class AstInBooleanNode : AstBooleanBlock() {
