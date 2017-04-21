@@ -27,54 +27,6 @@ open class ESParser : BaseParser<Any>() {
         val SPACE_LF_CHARS = "${SPACE_CHARS}${LF_CHARS}"
     }
 
-    val script: AstScript
-        get() = peek(context.getValueStack().size() - 1) as AstScript
-
-
-    fun actionLog(msg: String): Boolean {
-        log.info(msg)
-        return true
-    }
-
-    fun actionError(msg: String) {
-        throw ActionException(msg)
-    }
-
-    fun asAstIndentBlock(n: Any): AstIndentBlock {
-        if (n is AstIndentBlock) {
-            return n
-        } else {
-            throw ActionException("Not an indent block: $n")
-        }
-    }
-
-    fun asAstBlock(n: Any): AstBlock {
-        if (n is AstBlock) {
-            return n
-        } else {
-            throw ActionException("Not a block: $n")
-        }
-    }
-
-    fun asAstNode(n: Any): AstNode {
-        if (n is AstNode) {
-            return n
-        } else {
-            throw ActionException("Not a node: $n")
-        }
-    }
-
-    override fun push(value: Any?): Boolean {
-        log.info("PUSH \t{}", value)
-        return super.push(value)
-    }
-
-    override fun pop(): Any {
-        return super.pop().also {
-            log.info("POP  \t{}", it)
-        }
-    }
-
     open fun Script(): Rule {
         return Sequence(
                 push(AstScript()),
@@ -586,6 +538,48 @@ open class ESParser : BaseParser<Any>() {
     ////////////////////////////////////s///////////////////////////////////////
     //                            Helpers                                    //
     ///////////////////////////////////////////////////////////////////////////
+
+    val script: AstScript
+        get() = peek(context.getValueStack().size() - 1) as AstScript
+    
+    fun actionError(msg: String) {
+        throw ActionException(msg)
+    }
+
+    fun asAstIndentBlock(n: Any): AstIndentBlock {
+        if (n is AstIndentBlock) {
+            return n
+        } else throw ActionException(
+                "'${(n as? AstNode)?.name ?: n}' " +
+                        "is not an indented block, incorrect identation")
+    }
+
+    fun asAstBlock(n: Any): AstBlock {
+        if (n is AstBlock) {
+            return n
+        } else throw ActionException(
+                "'${(n as? AstNode)?.name ?: n}' " +
+                        "is not a block, incorrect indentation")
+    }
+
+    fun asAstNode(n: Any): AstNode {
+        if (n is AstNode) {
+            return n
+        } else {
+            throw ActionException("'${n}' is not an ast node")
+        }
+    }
+
+    override fun push(value: Any?): Boolean {
+        log.info("PUSH \t{}", value)
+        return super.push(value)
+    }
+
+    override fun pop(): Any {
+        return super.pop().also {
+            log.info("POP  \t{}", it)
+        }
+    }
 
     fun ESParser.action(block: ESParser.() -> Unit): Boolean {
         block()
