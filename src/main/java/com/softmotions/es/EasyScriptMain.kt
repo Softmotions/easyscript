@@ -23,16 +23,12 @@ class EasyScriptMain {
     }
 
     fun run() {
-
         val data0 = """
-if file exists 'myfile'
-    echo 'AAA'
-    if 1 in [1,2]
-        echo 'CCC'
-    else
-        echo 'DDD'
-else
-    echo 'BBB'
+if file exists 'myfile.txt'
+    echo 'BBBB'
+    if dir exists 'mydir'
+        echo 'CCCC'
+echo 'ZZZZ'
 """
 
 
@@ -58,14 +54,15 @@ else
         val runner = TracingParseRunner<Any>(parser.Script());
         runner.withLog(StringBuilderSink())
         val result = runner
-                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", false, true))
+                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))
         if (!result.parseErrors.isEmpty()) {
             println(ErrorUtils.printParseError(result.parseErrors[0]))
-            System.out.println(runner.log);
+            //System.out.println(runner.log);
         } else {
             println("NodeTree: ${printNodeTree(result)}\n")
             val value = result.parseTreeRoot?.value
             println(value ?: "")
+            //System.out.println(runner.log);
         }
     }
 }

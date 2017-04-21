@@ -35,10 +35,13 @@ open class AstBooleanBlock : AstBlock() {
     var negate = false
 }
 
-class AstFileBooleanNode : AstBooleanBlock() {
-    var type: AstFileType = AstFileType.FILE
+class AstFileBooleanNode(val type: AstFileType) : AstBooleanBlock() {     
     var predicate: AstFilePredicate = AstFilePredicate.EXISTS
     var data: AstData = AstEmptyData()
+    override fun toString(): String {
+        return "AstFileBooleanNode(type=$type, predicate=$predicate, data=$data, bchildren=$children)"
+    }
+
 }
 
 class AstInBooleanNode : AstBooleanBlock() {

@@ -5,7 +5,9 @@ import org.parboiled.BaseParser
 import org.parboiled.Rule
 import org.parboiled.annotations.MemoMismatches
 import org.parboiled.annotations.SuppressSubnodes
+import org.parboiled.errors.ActionException
 import org.parboiled.support.Var
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 /**
@@ -16,7 +18,7 @@ import org.slf4j.LoggerFactory
 @JvmSuppressWildcards
 open class ESParser : BaseParser<Any>() {
 
-    val log = LoggerFactory.getLogger(ESParser::class.java)
+    val log: Logger = LoggerFactory.getLogger(ESParser::class.java)
 
     companion object {
         val LF_CHAR = '\n'
@@ -28,6 +30,39 @@ open class ESParser : BaseParser<Any>() {
     val script: AstScript
         get() = peek(context.getValueStack().size() - 1) as AstScript
 
+
+    fun actionLog(msg: String): Boolean {
+        log.info(msg)
+        return true
+    }
+
+    fun actionError(msg: String) {
+        throw ActionException(msg)
+    }
+
+    fun asAstIndentBlock(n: Any): AstIndentBlock {
+        if (n is AstIndentBlock) {
+            return n
+        } else {
+            throw ActionException("Not an indent block: $n")
+        }
+    }
+
+    fun asAstBlock(n: Any): AstBlock {
+        if (n is AstBlock) {
+            return n
+        } else {
+            throw ActionException("Not a block: $n")
+        }
+    }
+
+    fun asAstNode(n: Any): AstNode {
+        if (n is AstNode) {
+            return n
+        } else {
+            throw ActionException("Not a node: $n")
+        }
+    }
 
     override fun push(value: Any?): Boolean {
         log.info("PUSH \t{}", value)
@@ -43,51 +78,76 @@ open class ESParser : BaseParser<Any>() {
     open fun Script(): Rule {
         return Sequence(
                 push(AstScript()),
-                Spacing().suppressNode(),
+                Spacing(),
                 FirstBlock(),
-                Spacing().suppressNode(),
+                Spacing(),
                 action {
+                    while (context.valueStack.size() > 1 && peek() is AstIndentBlock) pop()
                     log.info("SCRIPT: {}", script)
+                    log.info("VSZ: {}", context.valueStack.size())
                 })
     }
 
     open fun FirstBlock(): Rule {
         return Sequence(
                 BlockCore().label("FirstBlock::BlockCore"),
-                FirstOf(Block().label("FirstBlock::Block"), Sequence(SpacingAll(), EOI).suppressNode())
+                action {
+                    (peek(1) as AstScript).addChild(asAstNode(pop()))
+                },
+                FirstOf(Block().label("FirstBlock::Block"), Sequence(SpacingAll(), EOI))
         )
     }
 
     open fun Block(): Rule {
+        val idn = Var<Boolean>()
         return Sequence(
                 SpacingNoLF(),
                 OneOrMore(AnyOf(LF_CHARS)),
-                Optional(IndentDedent()),
-                Spacing(),
-                BlockCore(),
-                FirstOf(Block(), Sequence(SpacingAll(), EOI).suppressNode())
+                FirstOf(
+                        Sequence(
+                                FirstOf(
+                                        Sequence(Indent(), idn.set(true)),
+                                        Sequence(Dedent(), idn.set(false))
+                                ),
+                                BlockCore(),
+                                action {
+                                    if (idn.get()) {
+                                        val iblock = asAstIndentBlock(asAstBlock(peek(1)).lastChild())
+                                        iblock.addChild(asAstNode(pop()))
+                                        push(iblock)
+                                    } else {
+                                        val node = asAstNode(pop())
+                                        asAstIndentBlock(pop())
+                                        asAstBlock(peek()).addChild(node)
+                                    }
+                                }),
+                        Sequence(
+                                SpacingNoLF(),
+                                BlockCore(),
+                                action {
+                                    asAstBlock(peek(1)).addChild(asAstNode(pop()))
+                                }
+                        )
+                ),
+                FirstOf(Block(),
+                        Sequence(SpacingAll(), EOI))
         )
     }
 
     open fun BlockCore(): Rule {
-        return Sequence(
-                FirstOf(
-                        Echo(),
-                        Set(),
-                        Unset(),
-                        Run(),
-                        If(),
-                        Else(),
-                        Fail(),
-                        RunBlock(),
-                        Shell(),
-                        Send(),
-                        Each()
-                ),
-                action {
-                    val node = pop() as AstNode
-                    (peek() as AstBlock).addChildren(node)
-                })
+        return FirstOf(
+                Echo(),
+                Set(),
+                Unset(),
+                Run(),
+                If(),
+                Else(),
+                Fail(),
+                RunBlock(),
+                Shell(),
+                Send(),
+                Each()
+        )
     }
 
     open fun Each(): Rule {
@@ -140,7 +200,7 @@ open class ESParser : BaseParser<Any>() {
                                 StringSingleQuoted() /* todo call */)
                 ),
                 Optional(
-                        SpacingNoLF().suppressNode(),
+                        SpacingNoLF(),
                         Action("exit"),
                         Number()
                 )
@@ -150,7 +210,7 @@ open class ESParser : BaseParser<Any>() {
     open fun Set(): Rule {
         return Sequence(
                 Action("set"),
-                Optional(Sequence("env", Blank().suppressNode())).label("Env"),
+                Optional(Sequence("env", Blank())).label("Env"),
                 Identifier(),
                 Blank().suppressNode(),
                 Optional(ReadAs())
@@ -160,7 +220,7 @@ open class ESParser : BaseParser<Any>() {
     open fun Unset(): Rule {
         return Sequence(
                 Action("unset"),
-                Optional(Sequence("env", Blank().suppressNode())).label("Env"),
+                Optional(Sequence("env", Blank())).label("Env"),
                 Identifier())
     }
 
@@ -173,65 +233,55 @@ open class ESParser : BaseParser<Any>() {
                 "lines",
                 vnode.set(ReadAs.LINES),
                 SpacingNoLF(),
-                push(vnode.get())
+                push(vnode.getAndSet(null))
         )
     }
 
     open fun If(): Rule {
-        val vindent = Var<Int>(0)
         return Sequence(
                 Action("if"),
-                vindent.set(script.indent),
                 BooleanExp(),
                 action {
-                    val bb = pop() as AstBooleanBlock
-                    push(AstIf(vindent.get(), bb))
+                    push(AstIf(pop() as AstBooleanBlock))
                 }
         )
     }
-    
+
     open fun Else(): Rule {
-        val vindent = Var<Int>(0)
         return Sequence(
                 String("else"),
-                vindent.set(script.indent),
                 Optional(Blank(), If())
                 // todo
         )
     }
 
     open fun BooleanExp(): Rule {
-        val vnode = Var<AstBooleanBlock>()
         return Sequence(
                 // todo handle NOT
-                Sequence(FirstOf(
+                FirstOf(
                         IfFile(),
                         IfCompare(),
                         IfIn()),
-                        action {
-                            vnode.set(pop() as AstBooleanBlock)
-                        }
-                ),
                 Optional(
                         FirstOf(JoinAnd(), JoinOr()),
                         BooleanExp(),
                         action {
                             val nexp = pop() as AstBooleanBlock
                             nexp.join = pop() as BooleanBlockJoin
-                            vnode.get().addChildren(nexp)
+                            asAstBlock(peek()).addChild(nexp)
                         }
-                ),
-                push(vnode.get())
+                )
         )
     }
 
     open fun IfIn(): Rule {
-        val node = AstInBooleanNode()
+        val vnode = Var<AstInBooleanNode>()
         return Sequence(
                 AtomicData(),
                 Blank(),
+                vnode.set(AstInBooleanNode()),
                 Optional("not", Blank(), action {
-                    node.negate = !node.negate
+                    vnode.get().negate = !vnode.get().negate
                 }),
                 "in",
                 Blank(),
@@ -240,56 +290,58 @@ open class ESParser : BaseParser<Any>() {
                         ReadAs()
                 ),
                 action {
-                    node.addChildren(pop() as AstNode)
-                    push(node)
+                    vnode.get().addChild(asAstNode(pop()))
+                    push(vnode.getAndSet(null))
                 }
         )
     }
 
     open fun IfFile(): Rule {
-        val node = AstFileBooleanNode()
+        val vnode = Var<AstFileBooleanNode>()
         return Sequence(
                 Sequence(FirstOf(
                         "file", "dir", "link"),
                         action {
-                            node.type = when (match()) {
-                                "file" -> AstFileType.FILE
-                                "dir" -> AstFileType.DIR
-                                "link" -> AstFileType.LINK
-                                else -> error("IfFile")
-                            }
+                            vnode.set(AstFileBooleanNode(
+                                    when (match()) {
+                                        "file" -> AstFileType.FILE
+                                        "dir" -> AstFileType.DIR
+                                        "link" -> AstFileType.LINK
+                                        else -> throw ActionException("IfFile")
+                                    }
+                            ))
                         }),
                 Optional(Is()),
                 Optional(Not(), action {
-                    node.negate = node.negate.not()
+                    vnode.get().negate = vnode.get().negate.not()
                 }),
                 FilePredicate(),
                 action {
-                    node.predicate = pop() as AstFilePredicate
+                    vnode.get().predicate = pop() as AstFilePredicate
                 },
-                Blank().suppressNode(),
+                Blank(),
                 Data(),
                 action {
-                    node.data = pop() as AstData
-                    push(node)
+                    vnode.get().data = pop() as AstData
+                    push(vnode.getAndSet(null))
                 }
         )
     }
 
     open fun IfCompare(): Rule {
-        val node = AstCompareBooleanBlock()
+        val vnode = Var<AstCompareBooleanBlock>()
         return Sequence(
                 AtomicData(),
-                node.addChildren(pop() as AstAtomicData),
-                SpacingNoLF().suppressNode(),
+                vnode.setAndGet(AstCompareBooleanBlock()).addChild(pop() as AstAtomicData),
+                SpacingNoLF(),
                 CompareOp(),
                 action {
-                    node.op = pop() as AstCompareOp
+                    vnode.get().op = pop() as AstCompareOp
                 },
-                SpacingNoLF().suppressNode(),
+                SpacingNoLF(),
                 AtomicData(),
-                node.addChildren(pop() as AstAtomicData),
-                push(node)
+                vnode.get().addChild(pop() as AstAtomicData),
+                push(vnode.getAndSet(null))
         )
     }
 
@@ -307,7 +359,7 @@ open class ESParser : BaseParser<Any>() {
                         ">=" -> AstCompareOp.GTE
                         "<" -> AstCompareOp.LT
                         ">" -> AstCompareOp.GT
-                        else -> error("CompareOp")
+                        else -> actionError("CompareOp")
                     })
                 }
         )
@@ -315,7 +367,7 @@ open class ESParser : BaseParser<Any>() {
 
     open fun FilePredicate(): Rule {
         return Sequence(
-                Blank().suppressNode(),
+                Blank(),
                 FirstOf(
                         "exists",
                         "exec",
@@ -328,7 +380,7 @@ open class ESParser : BaseParser<Any>() {
                         "exec" -> AstFilePredicate.EXEC
                         "readable" -> AstFilePredicate.READABLE
                         "writable" -> AstFilePredicate.WRITABLE
-                        else -> error("FilePredicate")
+                        else -> actionError("FilePredicate")
                     })
                 }
         )
@@ -336,23 +388,23 @@ open class ESParser : BaseParser<Any>() {
 
 
     open fun Is(): Rule {
-        return Sequence(Blank().suppressNode(), String("is"));
+        return Sequence(Blank(), String("is"));
     }
 
     open fun Not(): Rule {
-        return Sequence(Blank().suppressNode(), String("not"));
+        return Sequence(Blank(), String("not"));
     }
 
     open fun JoinAnd(): Rule {
-        return Sequence(BlankMayLF().suppressNode(), String("and"), Blank(), push(BooleanBlockJoin.AND));
+        return Sequence(BlankMayLF(), String("and"), Blank(), push(BooleanBlockJoin.AND));
     }
 
     open fun JoinOr(): Rule {
-        return Sequence(BlankMayLF().suppressNode(), String("or"), Blank(), push(BooleanBlockJoin.OR));
+        return Sequence(BlankMayLF(), String("or"), Blank(), push(BooleanBlockJoin.OR));
     }
 
     open fun Action(name: String): Rule {
-        return Sequence(name, Blank().suppressNode());
+        return Sequence(name, Blank());
     }
 
     @MemoMismatches
@@ -364,27 +416,25 @@ open class ESParser : BaseParser<Any>() {
                         "echo", "fail", "send",
                         "each", "read", "call", "shell",
                         "as", "lines"),
-                Blank().suppressNode());
+                Blank());
     }
 
     @SuppressSubnodes
     open fun ReadAs(): Rule {
-        val node = AstRead()
+        val vnode = Var<AstRead>()
         return Sequence(
                 "read",
-                Blank().suppressNode(),
+                Blank(),
                 Data(),
-                action {
-                    node.data = pop() as AstData
-                },
+                vnode.set(AstRead(pop() as AstData)),
                 Optional(
-                        Blank().suppressNode(),
+                        Blank(),
                         As(),
                         action {
-                            node.readAs = pop() as ReadAs
+                            vnode.get().readAs = pop() as ReadAs
                         }
                 ),
-                push(node)
+                push(vnode.getAndSet(null))
         )
     }
 
@@ -410,26 +460,26 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun ArrayData(): Rule {
-        val array = AstArrayData()
+        val vnode = Var<AstArrayData>();
         return Sequence(
                 '[',
-                Spacing().suppressNode(),
+                Spacing(),
+                vnode.set(AstArrayData()),
                 Optional(
                         AtomicData(),
                         action {
-                            array.addChildren(pop() as AstAtomicData)
+                            vnode.get().addChild(pop() as AstAtomicData)
                         },
                         ZeroOrMore(',',
-                                Spacing().suppressNode(),
+                                Spacing(),
                                 AtomicData(),
                                 action {
-                                    array.addChildren(pop() as AstAtomicData)
+                                    vnode.get().addChild(pop() as AstAtomicData)
                                 })
                 ),
-                Spacing().suppressNode(),
+                Spacing(),
                 ']',
-                push(array)
-
+                push(vnode.getAndSet(null))
         )
     }
 
@@ -493,38 +543,17 @@ open class ESParser : BaseParser<Any>() {
         return FirstOf(CharRange('a', 'z'), CharRange('A', 'Z'), Digit(), '_')
     };
 
+    @SuppressSubnodes
     open fun Letter(): Rule = FirstOf(CharRange('a', 'z'), CharRange('A', 'Z'), '_');
 
+    @SuppressSubnodes
     open fun Digit(): Rule = CharRange('0', '9')
 
+    @SuppressSubnodes
+    open fun Indent(): Rule = OneOrMore(INDENT)
 
     @SuppressSubnodes
-    open fun Indent(): Rule = Sequence(Spacing(), INDENT, action {
-        log.info("!!!INDENT")
-        val s = this.script
-        s.indent()
-    })
-
-    @SuppressSubnodes
-    open fun Dedent(): Rule = Sequence(Spacing(), DEDENT, action {
-        log.info("!!!DEDENT") // todo
-        val s = this.script
-        s.dedent()
-        val node = peek()
-        if (node is AstIndentBlock && node.indent == s.indent) {
-            pop()
-            val parent = peek();
-            if (parent is AstBlock) {
-                parent.addChildren(node)
-            } else {
-                parent as AstNode
-                error("The '${parent.name}' is not a block")
-            }
-        }
-    })
-
-    @SuppressSubnodes
-    open fun IndentDedent(): Rule = OneOrMore(FirstOf(Indent(), Dedent()))
+    open fun Dedent(): Rule = OneOrMore(DEDENT)
 
     @SuppressSubnodes
     open fun IndentDedentZeroOrMore(): Rule = ZeroOrMore(FirstOf(Indent(), Dedent()))

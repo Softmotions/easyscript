@@ -1,9 +1,13 @@
 package com.softmotions.es.ast
 
+import org.slf4j.LoggerFactory
+
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
 abstract class AstNode {
+
+    val log = LoggerFactory.getLogger(javaClass)
 
     var parent: AstBlock? = null
 

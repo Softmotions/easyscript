@@ -11,8 +11,6 @@ class AstAtomicData(val value: TypedValue) : AstNode(), AstData {
         get() = "quoted string or run"
 
     override fun toString(): String {
-        return "AstAtomicData(" +
-                "value='$value'" +
-                ")"
+        return value.toString()
     }
 }

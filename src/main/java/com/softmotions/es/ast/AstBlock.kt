@@ -5,18 +5,27 @@ package com.softmotions.es.ast
  */
 abstract class AstBlock : AstNode() {
 
+
     val children: MutableList<AstNode> by lazy(LazyThreadSafetyMode.NONE, {
         ArrayList<AstNode>()
     })
 
-    fun addChildren(node: AstNode): Boolean {
-        node.parent?.removeChildren(node)
+
+    fun lastChild(): AstNode {
+        return children.last()
+    }
+
+
+    fun addChild(node: AstNode): Boolean {
+        log.info("ADD CHILD: $node INTO ${javaClass.simpleName}")
+        node.parent?.removeChild(node)
         node.parent = this;
-        children += node
+        children.add(node)
         return true
     }
 
-    fun removeChildren(node: AstNode): Boolean {
+    fun removeChild(node: AstNode): Boolean {
+        log.info("REMOVE CHILD: $node FROM $this")
         children.remove(node)
         return true
     }

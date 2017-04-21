@@ -6,12 +6,10 @@ enum class ReadAs {
     LINES
 }
 
-class AstRead : AstNode() {
+class AstRead(val data: AstData) : AstNode() {
 
     override val name: String
         get() = "read expression"
     
     var readAs = ReadAs.DEFAULT
-
-    var data: AstData = AstEmptyData()
 }
