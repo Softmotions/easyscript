@@ -3,7 +3,7 @@ package com.softmotions.es.ast
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-class AstScript() : AstBlock() {
+class AstScript : AstBlock() {
 
     override val name: String
         get() = "script"
