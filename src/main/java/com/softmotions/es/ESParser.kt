@@ -200,11 +200,23 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun Else(): Rule {
-
+        val veif = Var<Boolean>()
         return Sequence(
                 String("else"),
-                Optional(Blank(), If())
-                // todo
+                veif.set(false),
+                Optional(
+                        Blank(),
+                        If(),
+                        action {
+                            veif.set(true)
+                            push(AstElse(asAstIf(pop())))
+                        }
+                ),
+                action {
+                    if (!veif.get()) {
+                        push(AstElse())
+                    }
+                }
         )
     }
 
@@ -541,32 +553,41 @@ open class ESParser : BaseParser<Any>() {
 
     val script: AstScript
         get() = peek(context.getValueStack().size() - 1) as AstScript
-    
+
     fun actionError(msg: String) {
         throw ActionException(msg)
+    }
+
+    fun asAstIf(n: Any): AstIf {
+        if (n is AstIf) {
+            return n
+        } else throw ActionException(
+                "Expected 'if/else' statement but found '${(n as? AstNode)?.name ?: n}'. " +
+                        "Incorrect balancing of 'if else' statements")
+
     }
 
     fun asAstIndentBlock(n: Any): AstIndentBlock {
         if (n is AstIndentBlock) {
             return n
         } else throw ActionException(
-                "'${(n as? AstNode)?.name ?: n}' " +
-                        "is not an indented block, incorrect identation")
+                "Expected an indented block but found '${(n as? AstNode)?.name ?: n}'. " +
+                        "Incorrect indentation")
     }
 
     fun asAstBlock(n: Any): AstBlock {
         if (n is AstBlock) {
             return n
         } else throw ActionException(
-                "'${(n as? AstNode)?.name ?: n}' " +
-                        "is not a block, incorrect indentation")
+                "Expected a block but found '${(n as? AstNode)?.name ?: n}'. " +
+                        "Incorrect indentation")
     }
 
     fun asAstNode(n: Any): AstNode {
         if (n is AstNode) {
             return n
         } else {
-            throw ActionException("'${n}' is not an ast node")
+            throw ActionException("Expected ast node bu found '${n}'")
         }
     }
 

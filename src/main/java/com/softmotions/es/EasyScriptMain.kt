@@ -26,8 +26,8 @@ class EasyScriptMain {
         val data0 = """
 if file exists 'myfile.txt'
     echo 'BBBB'
-    if dir exists 'mydir'
-        echo 'CCCC'
+else if dir exists 'mydir'
+    echo 'DDD'
 echo 'ZZZZ'
 """
 
