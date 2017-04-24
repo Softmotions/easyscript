@@ -21,7 +21,6 @@ open class ESParser : BaseParser<Any>() {
     val log: Logger = LoggerFactory.getLogger(ESParser::class.java)
 
     companion object {
-        val LF_CHAR = '\n'
         val LF_CHARS = "\r\n"
         val SPACE_CHARS = " \t"
         val SPACE_LF_CHARS = "${SPACE_CHARS}${LF_CHARS}"
@@ -94,11 +93,10 @@ open class ESParser : BaseParser<Any>() {
                 Echo(),
                 Set(),
                 Unset(),
-                Run(),
+                RunBlock(),
                 If(),
                 Else(),
                 Fail(),
-                RunBlock(),
                 Shell(),
                 Send(),
                 Each()
@@ -115,7 +113,13 @@ open class ESParser : BaseParser<Any>() {
         )
     }
 
-    open fun RunBlock(): Rule = Run()
+    open fun RunBlock(): Rule {
+        return Sequence(
+                Run(),
+                action {
+                    push(AstRunBlock(pop() as TypedValue))
+                })
+    }
 
     open fun Echo(): Rule {
         return Sequence(
@@ -147,46 +151,95 @@ open class ESParser : BaseParser<Any>() {
 
 
     open fun Fail(): Rule {
+        val vnode = Var<AstFail>()
         return Sequence(
                 Action("fail"),
+                action {
+                    vnode.set(AstFail())
+                },
                 Optional(
                         FirstOf(StringMultiQuoted(),
                                 StringDoubleQuoted(),
-                                StringSingleQuoted() /* todo call */)
+                                StringSingleQuoted() /* todo call */),
+                        action {
+                            vnode.get().msg = pop() as TypedValue
+                        }
                 ),
                 Optional(
                         SpacingNoLF(),
                         Action("exit"),
-                        Number()
-                )
+                        Number(),
+                        action {
+                            vnode.get().exitCode = pop() as TypedValue
+                        }
+                ),
+                action {
+                    push(vnode.getAndSet(null))
+                }
         )
     }
 
     open fun Set(): Rule {
+        val vnode = Var<AstSet>();
         return Sequence(
                 Action("set"),
-                Optional(Sequence("env", Blank())).label("Env"),
+                vnode.set(AstSet()),
+                Optional(Sequence("env", Blank(), action {
+                    vnode.get().isEnv = true
+                })),
                 Identifier(),
-                Blank().suppressNode(),
-                Optional(ReadAs())
+                action {
+                    vnode.get().identifier = (pop() as TypedValue).value
+                },
+                Blank(),
+                Data(),
+                action {
+                    vnode.get().data = pop() as AstData
+                },
+                Optional(
+                        Blank(),
+                        As(),
+                        action {
+                            vnode.get().readAs = pop() as ReadAs
+                        }
+                ),
+                action {
+                    push(vnode.getAndSet(null))
+                }
         )
     }
 
     open fun Unset(): Rule {
+        val vnode = Var<AstUnset>()
         return Sequence(
                 Action("unset"),
-                Optional(Sequence("env", Blank())).label("Env"),
-                Identifier())
+                action {
+                    vnode.set(AstUnset())
+                },
+                Optional(
+                        "env",
+                        Blank(),
+                        action {
+                            vnode.get().isEnv = true
+                        }
+                ),
+                Identifier(),
+                action {
+                    vnode.get().identifier = (pop() as TypedValue).value
+                    push(vnode.getAndSet(null))
+                })
     }
 
-
     open fun As(): Rule {
-        val vnode = Var<ReadAs>(ReadAs.DEFAULT)
+        val vnode = Var<ReadAs>()
         return Sequence(
                 "as",
                 Blank(),
-                "lines",
-                vnode.set(ReadAs.LINES),
+                FirstOf(
+                        Sequence("lines", vnode.set(ReadAs.LINES)),
+                        Sequence("words", vnode.set(ReadAs.WORDS)),
+                        Sequence("chars", vnode.set(ReadAs.CHARS))
+                ),
                 SpacingNoLF(),
                 push(vnode.getAndSet(null))
         )
@@ -382,8 +435,8 @@ open class ESParser : BaseParser<Any>() {
                         "if", "else",
                         "set", "unset",
                         "echo", "fail", "send",
-                        "each", "read", "call", "shell",
-                        "as", "lines"),
+                        "each", "call", "shell",
+                        "read", "as", "lines", "words", "chars"),
                 Blank());
     }
 
@@ -455,8 +508,7 @@ open class ESParser : BaseParser<Any>() {
     open fun Identifier(): Rule {
         return Sequence(
                 TestNot(Action()),
-                Letter(),
-                ZeroOrMore(LetterOrDigit()),
+                Sequence(Letter(), ZeroOrMore(LetterOrDigit())),
                 push(TypedValue.identifier(match()))
         )
     }

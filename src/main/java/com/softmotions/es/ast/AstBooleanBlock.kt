@@ -30,7 +30,7 @@ enum class AstCompareOp {
 
 open class AstBooleanBlock : AstBlock() {
     override val name: String
-        get() = "boolean expr"
+        get() = "bool expr"
     var join = BooleanBlockJoin.NONE
     var negate = false
     override fun toStringOptions(): String {

@@ -23,11 +23,11 @@ class EasyScriptMain {
 
     fun run() {
         val data0 = """
-if file exists 'myfile.txt'
-    echo 'BBBB'
-else if dir exists 'mydir'
-    echo 'DDD'
-echo 'ZZZZ'
+`ps -Af|grep java`
+    fail 'Fail message' exit 111
+echo "Hello!!!"
+if dir exists '/var/log'
+    echo 'Dir exists'
 """
 
 

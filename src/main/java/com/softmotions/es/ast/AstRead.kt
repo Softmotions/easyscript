@@ -3,7 +3,9 @@ package com.softmotions.es.ast
 
 enum class ReadAs {
     DEFAULT,
-    LINES
+    LINES,
+    WORDS,
+    CHARS
 }
 
 class AstRead(val data: AstData) : AstNode() {
