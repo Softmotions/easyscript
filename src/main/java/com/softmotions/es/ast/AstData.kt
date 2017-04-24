@@ -6,7 +6,7 @@ package com.softmotions.es.ast
 interface AstData {
 
     val first: TypedValue
-        get() = value.first()
+        get() = values.first()
 
-    val value: List<TypedValue>
+    val values: List<TypedValue>
 }

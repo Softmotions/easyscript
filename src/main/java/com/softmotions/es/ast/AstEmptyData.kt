@@ -8,6 +8,6 @@ class AstEmptyData : AstNode(), AstData {
     override val name: String
         get() = "empty data"
 
-    override val value: List<TypedValue>
+    override val values: List<TypedValue>
         get() = emptyList()
 }

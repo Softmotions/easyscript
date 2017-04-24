@@ -10,12 +10,12 @@ class AstArrayData : AstBlock(), AstData {
     override val name: String
         get() = "array"
 
-    override val value: List<TypedValue>
+    override val values: List<TypedValue>
         get() = children.map {
             (it as AstAtomicData).first
         }.toList()
 
     override fun toStringOptions(): String {
-        return value.toString()
+        return values.toString()
     }
 }
