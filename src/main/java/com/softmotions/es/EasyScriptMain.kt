@@ -5,7 +5,6 @@ import org.parboiled.buffers.IndentDedentInputBuffer
 import org.parboiled.common.StringBuilderSink
 import org.parboiled.errors.ErrorUtils
 import org.parboiled.parserunners.TracingParseRunner
-import org.parboiled.support.ParseTreeUtils.printNodeTree
 
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
@@ -59,7 +58,7 @@ echo 'ZZZZ'
             println(ErrorUtils.printParseError(result.parseErrors[0]))
             //System.out.println(runner.log);
         } else {
-            println("NodeTree: ${printNodeTree(result)}\n")
+            //println("NodeTree: ${printNodeTree(result)}\n")
             val value = result.parseTreeRoot?.value
             println(value ?: "")
             //System.out.println(runner.log);

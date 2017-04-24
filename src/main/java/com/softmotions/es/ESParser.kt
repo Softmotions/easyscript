@@ -35,8 +35,11 @@ open class ESParser : BaseParser<Any>() {
                 Spacing(),
                 action {
                     while (context.valueStack.size() > 1 && peek() is AstIndentBlock) pop()
-                    log.info("SCRIPT: {}", script)
-                    log.info("VSZ: {}", context.valueStack.size())
+                    // todo remove
+                    log.info("\n\n{}", script)
+                    if (context.valueStack.size() > 1) {
+                        throw Exception("Invalid stack state: " + context.valueStack)
+                    }
                 })
     }
 

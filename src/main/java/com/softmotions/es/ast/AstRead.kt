@@ -9,7 +9,11 @@ enum class ReadAs {
 class AstRead(val data: AstData) : AstNode() {
 
     override val name: String
-        get() = "read expression"
-    
+        get() = "read"
+
     var readAs = ReadAs.DEFAULT
+
+    override fun toStringOptions(): String {
+        return "${data} ${readAs}"
+    }
 }

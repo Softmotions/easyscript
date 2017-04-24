@@ -7,8 +7,4 @@ class AstScript : AstIndentBlock() {
 
     override val name: String
         get() = "script"
-    
-    override fun toString(): String {
-        return "AstScript($children)"
-    }
 }

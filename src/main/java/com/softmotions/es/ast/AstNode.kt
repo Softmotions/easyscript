@@ -21,7 +21,13 @@ abstract class AstNode {
         ctx[key] = value
     }
 
-    fun get(key: String): Any? {
-        return ctx[key]
+    fun get(key: String): Any? = ctx[key]
+
+    override fun toString() = this.toString(0)
+
+    open fun toStringOptions() = ""
+
+    open fun toString(padding: Int): String {
+        return "${" ".repeat(padding)}'${name}' ${toStringOptions()}"
     }
 }

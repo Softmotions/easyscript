@@ -13,7 +13,7 @@ class AstIf(val bb: AstBooleanBlock) : AstIndentBlock() {
     override val name: String
         get() = "if"
 
-    override fun toString(): String {
-        return "AstIf(bb=$bb, ${toStringChildren()}, els=$els"
+    override fun toStringOptions(): String {
+        return bb.toString()
     }
 }

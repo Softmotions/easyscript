@@ -30,16 +30,19 @@ enum class AstCompareOp {
 
 open class AstBooleanBlock : AstBlock() {
     override val name: String
-        get() = "boolean expression"
+        get() = "boolean expr"
     var join = BooleanBlockJoin.NONE
     var negate = false
+    override fun toStringOptions(): String {
+        return "${if (join == BooleanBlockJoin.NONE) "" else join.toString()}${if (negate) " NOT" else ""}"
+    }
 }
 
-class AstFileBooleanNode(val type: AstFileType) : AstBooleanBlock() {     
+class AstFileBooleanNode(val type: AstFileType) : AstBooleanBlock() {
     var predicate: AstFilePredicate = AstFilePredicate.EXISTS
     var data: AstData = AstEmptyData()
-    override fun toString(): String {
-        return "AstFileBooleanNode(type=$type, predicate=$predicate, data=$data, ${toStringChildren()}"
+    override fun toStringOptions(): String {
+        return "${super.toStringOptions()} ${type} ${predicate} ${data}"
     }
 }
 
@@ -48,8 +51,8 @@ class AstInBooleanNode : AstBooleanBlock() {
 }
 
 class AstCompareBooleanBlock : AstBooleanBlock() {
-   var op = AstCompareOp.EQ
+    var op = AstCompareOp.EQ
+    override fun toStringOptions(): String {
+        return "${super.toStringOptions()}, op=${op}"
+    }
 }
-
-
-

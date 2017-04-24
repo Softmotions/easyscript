@@ -6,9 +6,9 @@ package com.softmotions.es.ast
 class AstElse(val astIf: AstIf? = null) : AstIndentBlock() {
 
     override val name: String
-        get() = "else/else if"
+        get() = "else"
 
-    override fun toString(): String {
-        return "AstElse(if=$astIf, ${toStringChildren()}"
+    override fun toStringOptions(): String {
+        return astIf?.toString() ?: ""
     }
 }
