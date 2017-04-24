@@ -41,6 +41,10 @@ open class AstBooleanBlock : AstNode() {
 
     var next: AstBooleanBlock? = null
 
+    override fun toString(padding: Int): String {
+        return "${" ".repeat(padding)}${toStringOptions()}"
+    }
+
     override fun toStringOptions(): String {
         return "${if (join == BooleanBlockJoin.NONE) "" else join.toString()} ${if (negate) " NOT" else ""}"
     }
