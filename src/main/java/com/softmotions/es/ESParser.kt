@@ -134,22 +134,28 @@ open class ESParser : BaseParser<Any>() {
     open fun Shell(): Rule {
         return Sequence(
                 Action("shell"),
-                Data()
+                Data(),
+                action {
+                    push(AstShell(pop() as AstData))
+                }
         )
     }
 
+    // todo
     open fun Send(): Rule {
         return Sequence(
                 Action("send"),
-                FirstOf(Shell(), AtomicData()),
+                FirstOf(
+                        Shell(),
+                        AtomicData()
+                ),
                 SpacingNoLF(),
                 FirstOf(">>", '>'),
                 SpacingNoLF(),
                 Data()
         )
     }
-
-
+    
     open fun Fail(): Rule {
         val vnode = Var<AstFail>()
         return Sequence(

@@ -23,11 +23,9 @@ class EasyScriptMain {
 
     fun run() {
         val data0 = """
-`ps -Af|grep java`
-    fail 'Fail message' exit 111
-echo "Hello!!!"
-if dir exists '/var/log'
-    echo 'Dir exists'
+
+shell `cat bash.sh`
+
 """
 
 

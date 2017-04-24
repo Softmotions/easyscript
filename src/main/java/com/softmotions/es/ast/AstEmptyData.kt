@@ -7,4 +7,7 @@ class AstEmptyData : AstNode(), AstData {
 
     override val name: String
         get() = "empty data"
+
+    override val value: List<TypedValue>
+        get() = emptyList()
 }
