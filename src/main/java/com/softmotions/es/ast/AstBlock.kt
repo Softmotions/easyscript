@@ -38,10 +38,14 @@ abstract class AstBlock : AstNode() {
         return true
     }
 
+    open fun toStringChildren(): List<AstNode> {
+        return children
+    }
+
     override fun toString(padding: Int): String {
         val sb = StringBuilder()
         sb.append(super.toString(padding))
-        children.forEach({
+        toStringChildren().forEach({
             sb.append(SystemUtils.LINE_SEPARATOR)
                     .append(it.toString(padding + TOS_PADDING_INDENT))
         })

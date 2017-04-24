@@ -5,8 +5,10 @@ package com.softmotions.es.ast
  */
 class AstFail : AstNode() {
 
+    @JvmField
     var msg: TypedValue? = null
 
+    @JvmField
     var exitCode: TypedValue? = null
 
     override val name: String

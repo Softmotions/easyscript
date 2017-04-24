@@ -104,12 +104,26 @@ open class ESParser : BaseParser<Any>() {
     }
 
     open fun Each(): Rule {
+        val vnode = Var<AstEach>()
         return Sequence(Action("each"),
+                vnode.set(AstEach()),
                 Identifier(),
+                action {
+                    vnode.get().identifier = (pop() as TypedValue).value
+                },
                 Blank(),
                 "in",
                 Blank(),
-                Optional(ReadAs())
+                Data(),
+                action {
+                    vnode.get().data = pop() as AstData
+                },
+                Optional(Blank(), As(), action {
+                    vnode.get().readAs = pop() as ReadAs
+                }),
+                action {
+                    push(vnode.getAndSet(null))
+                }
         )
     }
 
@@ -141,21 +155,37 @@ open class ESParser : BaseParser<Any>() {
         )
     }
 
-    // todo
     open fun Send(): Rule {
+        val vnode = Var<AstSend>()
         return Sequence(
                 Action("send"),
+                vnode.set(AstSend()),
                 FirstOf(
-                        Shell(),
-                        AtomicData()
+                        Sequence(Shell(), action {
+                            vnode.get().srcShell = pop() as AstShell
+                        }),
+                        Sequence(AtomicData(), action {
+                            vnode.get().srcData = pop() as AstData
+                        })
                 ),
                 SpacingNoLF(),
-                FirstOf(">>", '>'),
+                FirstOf(
+                        Sequence(">>", action {
+                            vnode.get().sendOp = SendOp.APPEND
+                        }),
+                        Sequence('>', action {
+                            vnode.get().sendOp = SendOp.REPLACE
+                        })
+                ),
                 SpacingNoLF(),
-                Data()
+                Data(),
+                action {
+                    vnode.get().target = pop() as AstData
+                    push(vnode.getAndSet(null))
+                }
         )
     }
-    
+
     open fun Fail(): Rule {
         val vnode = Var<AstFail>()
         return Sequence(
@@ -295,18 +325,21 @@ open class ESParser : BaseParser<Any>() {
                         action {
                             val nexp = pop() as AstBooleanBlock
                             nexp.join = pop() as BooleanBlockJoin
-                            asAstBlock(peek()).addChild(nexp)
+                            asAstBooleanBlock(peek()).next = nexp
                         }
                 )
         )
     }
 
     open fun IfIn(): Rule {
-        val vnode = Var<AstInBooleanNode>()
+        val vnode = Var<AstCompareBooleanBlock>()
         return Sequence(
                 AtomicData(),
+                action {
+                    vnode.set(AstCompareBooleanBlock())
+                    vnode.get().left = asAstNode(pop())
+                },
                 Blank(),
-                vnode.set(AstInBooleanNode()),
                 Optional("not", Blank(), action {
                     vnode.get().negate = !vnode.get().negate
                 }),
@@ -317,7 +350,7 @@ open class ESParser : BaseParser<Any>() {
                         ReadAs()
                 ),
                 action {
-                    vnode.get().addChild(asAstNode(pop()))
+                    vnode.get().right = asAstNode(pop())
                     push(vnode.getAndSet(null))
                 }
         )
@@ -359,7 +392,10 @@ open class ESParser : BaseParser<Any>() {
         val vnode = Var<AstCompareBooleanBlock>()
         return Sequence(
                 AtomicData(),
-                vnode.setAndGet(AstCompareBooleanBlock()).addChild(pop() as AstAtomicData),
+                action {
+                    vnode.set(AstCompareBooleanBlock())
+                    vnode.get().left = asAstNode(pop())
+                },
                 SpacingNoLF(),
                 CompareOp(),
                 action {
@@ -367,13 +403,16 @@ open class ESParser : BaseParser<Any>() {
                 },
                 SpacingNoLF(),
                 AtomicData(),
-                vnode.get().addChild(pop() as AstAtomicData),
-                push(vnode.getAndSet(null))
+                action {
+                    vnode.get().right = asAstNode(pop())
+                    push(vnode.getAndSet(null))
+                }
         )
     }
 
     open fun CompareOp(): Rule {
         return Sequence(FirstOf(
+                "==",
                 '=',
                 "<=",
                 ">=",
@@ -382,6 +421,7 @@ open class ESParser : BaseParser<Any>() {
                 action {
                     push(when (match()) {
                         "=" -> AstCompareOp.EQ
+                        "==" -> AstCompareOp.EQ
                         "<=" -> AstCompareOp.LTE
                         ">=" -> AstCompareOp.GTE
                         "<" -> AstCompareOp.LT
@@ -539,15 +579,16 @@ open class ESParser : BaseParser<Any>() {
     open fun StringMultiQuoted(): Rule {
         val quoteChar = "\"\"\"";
         return Sequence(
-                quoteChar,
-                ZeroOrMore(
-                        Sequence(TestNot(AnyOf(quoteChar)), ANY)
-                ),
-                quoteChar,
+                Sequence(
+                        quoteChar,
+                        ZeroOrMore(
+                                TestNot(quoteChar),
+                                ANY
+                        ),
+                        quoteChar),
                 push(TypedValue.mquoted(match()))
         ).suppressSubnodes();
     }
-
 
     @SuppressSubnodes
     open fun StringDoubleQuoted(): Rule {
@@ -642,6 +683,13 @@ open class ESParser : BaseParser<Any>() {
         } else throw ActionException(
                 "Expected a block but found '${(n as? AstNode)?.name ?: n}'. " +
                         "Incorrect indentation")
+    }
+
+    fun asAstBooleanBlock(n: Any): AstBooleanBlock {
+        if (n is AstBooleanBlock) {
+            return n
+        } else throw ActionException(
+                "Expected a boolean expression but found '${(n as? AstNode)?.name ?: n}'.")
     }
 
     fun asAstNode(n: Any): AstNode {

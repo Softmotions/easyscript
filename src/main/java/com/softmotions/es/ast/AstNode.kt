@@ -9,6 +9,7 @@ abstract class AstNode {
 
     val log = LoggerFactory.getLogger(javaClass)
 
+    @JvmField
     var parent: AstBlock? = null
 
     abstract val name: String

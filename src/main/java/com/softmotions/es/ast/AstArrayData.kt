@@ -18,4 +18,8 @@ class AstArrayData : AstBlock(), AstData {
     override fun toStringOptions(): String {
         return values.toString()
     }
+
+    override fun toStringChildren(): List<AstNode> {
+        return emptyList()
+    }
 }

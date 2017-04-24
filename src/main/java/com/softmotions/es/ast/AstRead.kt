@@ -13,6 +13,7 @@ class AstRead(val data: AstData) : AstNode() {
     override val name: String
         get() = "read"
 
+    @JvmField
     var readAs = ReadAs.DEFAULT
 
     override fun toStringOptions(): String {

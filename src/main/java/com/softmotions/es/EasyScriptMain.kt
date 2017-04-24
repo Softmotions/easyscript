@@ -24,10 +24,12 @@ class EasyScriptMain {
     fun run() {
         val data0 = """
 
-shell `cat bash.sh`
+if file exists 'myfile.txt' and dir exists '/foo' or 'foo' = 'bar'
+    echo 'Hello!'
+else if file exists '/my/link'
+    echo 'FFFF'
 
 """
-
 
 //        val data1 = """
 //set VAR0 110
@@ -51,7 +53,7 @@ shell `cat bash.sh`
         val runner = TracingParseRunner<Any>(parser.Script());
         runner.withLog(StringBuilderSink())
         val result = runner
-                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))
+                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", false, true))
         if (!result.parseErrors.isEmpty()) {
             println(ErrorUtils.printParseError(result.parseErrors[0]))
             //System.out.println(runner.log);

@@ -25,34 +25,53 @@ enum class AstCompareOp {
     LTE,
     GTE,
     GT,
-    LT
+    LT,
+    IN
 }
 
-open class AstBooleanBlock : AstBlock() {
+open class AstBooleanBlock : AstNode() {
     override val name: String
         get() = "bool expr"
+
+    @JvmField
     var join = BooleanBlockJoin.NONE
+
+    @JvmField
     var negate = false
+
+    var next: AstBooleanBlock? = null
+
     override fun toStringOptions(): String {
-        return "${if (join == BooleanBlockJoin.NONE) "" else join.toString()}${if (negate) " NOT" else ""}"
+        return "${if (join == BooleanBlockJoin.NONE) "" else join.toString()} ${if (negate) " NOT" else ""}"
     }
 }
 
 class AstFileBooleanNode(val type: AstFileType) : AstBooleanBlock() {
+
+    @JvmField
     var predicate: AstFilePredicate = AstFilePredicate.EXISTS
+
+    @JvmField
     var data: AstData = AstEmptyData()
+
     override fun toStringOptions(): String {
-        return "${super.toStringOptions()} ${type} ${predicate} ${data}"
+        return "${super.toStringOptions()} ${type} ${predicate} ${data} ${next?.toString() ?: ""}"
     }
 }
 
-class AstInBooleanNode : AstBooleanBlock() {
-
-}
 
 class AstCompareBooleanBlock : AstBooleanBlock() {
+
+    @JvmField
+    var left: AstNode? = null
+
+    @JvmField
+    var right: AstNode? = null
+
+    @JvmField
     var op = AstCompareOp.EQ
+
     override fun toStringOptions(): String {
-        return "${super.toStringOptions()}, op=${op}"
+        return "${super.toStringOptions()} ${left} ${op} ${right} ${next?.toString() ?: ""}"
     }
 }

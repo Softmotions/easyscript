@@ -5,12 +5,16 @@ package com.softmotions.es.ast
  */
 class AstSet : AstIndentBlock() {
 
+    @JvmField
     var isEnv: Boolean = false
 
+    @JvmField
     var identifier: String = ""
 
+    @JvmField
     var readAs: ReadAs? = null
 
+    @JvmField
     var data: AstData? = null
 
     override val name: String

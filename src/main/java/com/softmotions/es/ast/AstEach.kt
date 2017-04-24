@@ -3,18 +3,18 @@ package com.softmotions.es.ast
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-class AstUnset : AstNode() {
+class AstEach : AstIndentBlock() {
 
-    @JvmField
-    var isEnv: Boolean = false
-
-    @JvmField
     var identifier: String = ""
 
+    var data: AstData = AstEmptyData()
+
+    var readAs: ReadAs = ReadAs.DEFAULT
+
     override val name: String
-        get() = "unset"
+        get() = "each"
 
     override fun toStringOptions(): String {
-        return "${if (isEnv) "env" else ""} ${identifier}"
+        return "${identifier} in ${data} as ${readAs}"
     }
 }
