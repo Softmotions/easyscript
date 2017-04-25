@@ -24,7 +24,7 @@ class BashEchoNodeHandler : AstNodeHandler<AstEcho, BashNodeHandlerContext> {
                 out.print("\"${ctx.interpolate(value)}\"")
             }
             ValueType.MQUOTED -> {
-                out.print("-e \"${ctx.interpolate(ctx.ln2escaped(value))}\"")
+                out.print("-e \"${ctx.interpolate(ctx.escapeNewLines(value))}\"")
             }
             ValueType.RUN -> {
                 out.print("`${ctx.interpolate(value)}`")

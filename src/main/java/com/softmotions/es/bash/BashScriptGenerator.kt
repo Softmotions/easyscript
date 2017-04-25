@@ -34,7 +34,9 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
         val SUBST_RE = Regex("([^$])?\\{([^}]+)}")
     }
 
-    val vars: MutableMap<String, AstNode> = HashMap()
+    override val vars: MutableMap<String, AstNode?> = HashMap()
+
+    val ctx: MutableMap<String, Any> = HashMap()
 
     override fun error(vararg vals: String) {
         log.error(vals.joinToString(" "))
@@ -44,15 +46,15 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
         log.warn(vals.joinToString(" "))
     }
 
-    override fun get(name: String): AstNode? {
-        return vars[name]
+    override fun get(name: String): Any? {
+        return ctx[name]
     }
 
-    override fun set(name: String, node: AstNode?) {
-        if (node == null) {
-            vars.remove(name)
+    override fun set(name: String, v: Any?) {
+        if (v == null) {
+            ctx.remove(name)
         } else {
-            vars[name] = node
+            ctx[name] = v
         }
     }
 
@@ -62,7 +64,7 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
         })
     }
 
-    override fun ln2escaped(v: String): String {
+    override fun escapeNewLines(v: String): String {
         return v.replace("\n", "\\n")
     }
 

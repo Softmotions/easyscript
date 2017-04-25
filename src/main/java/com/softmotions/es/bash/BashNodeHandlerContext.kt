@@ -8,11 +8,13 @@ import com.softmotions.es.ast.AstNode
  */
 interface BashNodeHandlerContext : AstNodeHandlerContext {
 
+    val vars: MutableMap<String, AstNode?>
+
+    operator fun get(name: String): Any?
+
+    operator fun set(name: String, v: Any?)
+
     fun interpolate(v: String): String
 
-    fun ln2escaped(v: String): String
-
-    operator fun get(name: String): AstNode?
-
-    operator fun set(name: String, node: AstNode?)
+    fun escapeNewLines(v: String): String
 }
