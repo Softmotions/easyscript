@@ -6,7 +6,7 @@ import org.parboiled.errors.ActionException
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-abstract class AstBlock : AstNode() {
+abstract class AstBlock : AstNode(), Iterable<AstNode> {
 
     val TOS_PADDING_INDENT = 4
 
@@ -37,6 +37,8 @@ abstract class AstBlock : AstNode() {
         children.remove(node)
         return true
     }
+
+    override fun iterator(): Iterator<AstNode> = children.iterator()
 
     open fun toStringChildren(): List<AstNode> {
         return children

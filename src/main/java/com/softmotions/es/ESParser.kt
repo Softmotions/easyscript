@@ -579,13 +579,17 @@ open class ESParser : BaseParser<Any>() {
     open fun Run(): Rule {
         return Sequence(
                 Quoted("Run", '`'),
-                push(TypedValue.run(match()))
+                action {
+                    push(TypedValue.run(match().let {
+                        it.substring(1, it.length - 1)
+                    }))
+                }
         )
     }
 
     @SuppressSubnodes
     open fun StringMultiQuoted(): Rule {
-        val quoteChar = "\"\"\"";
+        val quoteChar = "\"\"\""
         return Sequence(
                 Sequence(
                         quoteChar,
@@ -594,7 +598,11 @@ open class ESParser : BaseParser<Any>() {
                                 ANY
                         ),
                         quoteChar),
-                push(TypedValue.mquoted(match()))
+                action {
+                    push(TypedValue.mquoted(match().let {
+                        it.substring(quoteChar.length, it.length - quoteChar.length)
+                    }))
+                }
         ).suppressSubnodes();
     }
 
@@ -602,7 +610,11 @@ open class ESParser : BaseParser<Any>() {
     open fun StringDoubleQuoted(): Rule {
         return Sequence(
                 Quoted("StringDoubleQuoted", '"'),
-                push(TypedValue.dquoted(match()))
+                action {
+                    push(TypedValue.dquoted(match().let {
+                        it.substring(1, it.length - 1)
+                    }))
+                }
         )
     }
 
@@ -610,7 +622,11 @@ open class ESParser : BaseParser<Any>() {
     open fun StringSingleQuoted(): Rule {
         return Sequence(
                 Quoted("StringSingleQuoted", '\''),
-                push(TypedValue.squoted(match()))
+                action {
+                    push(TypedValue.squoted(match().let {
+                        it.substring(1, it.length - 1)
+                    }))
+                }
         )
     }
 

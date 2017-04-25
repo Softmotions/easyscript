@@ -5,6 +5,8 @@ package com.softmotions.es.ast
  */
 interface AstData {
 
+    val name: String
+
     val first: TypedValue
         get() = values.first()
 

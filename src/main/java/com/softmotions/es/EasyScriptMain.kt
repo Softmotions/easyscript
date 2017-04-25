@@ -1,6 +1,8 @@
 package com.softmotions.es
 
 import com.softmotions.es.ast.AstScript
+import com.softmotions.es.bash.BashScriptGenerator
+import org.apache.commons.io.output.StringBuilderWriter
 import org.parboiled.Parboiled
 import org.parboiled.buffers.IndentDedentInputBuffer
 import org.parboiled.common.StringBuilderSink
@@ -25,30 +27,15 @@ class EasyScriptMain {
     fun run() {
         val data0 = """
 
-`cat {FILE}`
-    fail "Ooops" exit 1
+echo `pwd`
+echo "Hello {myname} {myname2}"
+echo 'Hello {eeee}'
 """
 
-//        val data1 = """
-//set VAR0 110
-//env VAR1 "test"
-//set VAR2 `pwd`
-//    echo "Failed to run"
-//
-//echo VAR2
-//echo "VAR2={VAR2}"
-//
-//set FILE "~/.profile"
-
-//`cat {FILE}`
-//    fail "Oops.." exit 1
-//"""
         val data = data0;
         val parser = Parboiled.createParser(ESParser::class.java)
         val script = AstScript(false)
 
-//        val result = ReportingParseRunner<Any>(parser.Sript())
-//                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))
         val runner = TracingParseRunner<Any>(parser.Script(script));
         runner.withLog(StringBuilderSink())
         val result = runner.run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", false, true))
@@ -62,6 +49,13 @@ class EasyScriptMain {
             //System.out.println(runner.log);
             println()
             println(script)
+
+            val gen = BashScriptGenerator()
+            val w = StringBuilderWriter()
+            gen.generate(script, w)
+            println("\n\nBASH:")
+            println(w)
+
         }
     }
 }
