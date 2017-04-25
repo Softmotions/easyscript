@@ -3,7 +3,7 @@ package com.softmotions.es.ast
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-class AstEach : AstIndentBlock() {
+class AstEach : AstIndentBlock(), AstNestedBodyAware {
 
     var identifier: String = ""
 

@@ -1,5 +1,6 @@
 package com.softmotions.es
 
+import com.softmotions.es.ast.AstScript
 import org.parboiled.Parboiled
 import org.parboiled.buffers.IndentDedentInputBuffer
 import org.parboiled.common.StringBuilderSink
@@ -24,11 +25,8 @@ class EasyScriptMain {
     fun run() {
         val data0 = """
 
-if file exists 'myfile.txt' and dir exists '/foo' or 'foo' = 'bar'
-    echo 'Hello!'
-else if file exists '/my/link'
-    echo 'FFFF'
-
+`cat {FILE}`
+    fail "Ooops" exit 1
 """
 
 //        val data1 = """
@@ -46,22 +44,24 @@ else if file exists '/my/link'
 //    fail "Oops.." exit 1
 //"""
         val data = data0;
-        val parser = Parboiled.createParser(ESParser::class.java);
+        val parser = Parboiled.createParser(ESParser::class.java)
+        val script = AstScript(false)
 
 //        val result = ReportingParseRunner<Any>(parser.Sript())
 //                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", true, true))
-        val runner = TracingParseRunner<Any>(parser.Script());
+        val runner = TracingParseRunner<Any>(parser.Script(script));
         runner.withLog(StringBuilderSink())
-        val result = runner
-                .run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", false, true))
+        val result = runner.run(IndentDedentInputBuffer(data.toCharArray(), 4, "#", false, true))
         if (!result.parseErrors.isEmpty()) {
             println(ErrorUtils.printParseError(result.parseErrors[0]))
             //System.out.println(runner.log);
         } else {
             //println("NodeTree: ${printNodeTree(result)}\n")
-            val value = result.parseTreeRoot?.value
-            println(value ?: "")
+            //val value = result.parseTreeRoot?.value
+            //println(value ?: "")
             //System.out.println(runner.log);
+            println()
+            println(script)
         }
     }
 }

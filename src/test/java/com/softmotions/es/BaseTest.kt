@@ -1,5 +1,6 @@
 package com.softmotions.es
 
+import com.softmotions.es.ast.AstScript
 import org.parboiled.Parboiled
 import org.parboiled.buffers.IndentDedentInputBuffer
 import org.parboiled.common.StringBuilderSink
@@ -29,8 +30,9 @@ open class BaseTest {
     }
 
     fun parse(fail: Boolean = false,
-              text: () -> String) {
-        val runner = TracingParseRunner<Any>(parser.Script()).withLog(StringBuilderSink())
+              text: () -> String): AstScript {
+        val script = AstScript()
+        val runner = TracingParseRunner<Any>(parser.Script(script)).withLog(StringBuilderSink())
         val result = runner
                 .run(IndentDedentInputBuffer(text().toCharArray(),
                         4, "#", false, true))
@@ -41,6 +43,7 @@ open class BaseTest {
             }
             fail
         })
+        return script
     }
 
 }

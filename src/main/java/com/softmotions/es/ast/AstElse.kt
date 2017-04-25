@@ -3,7 +3,7 @@ package com.softmotions.es.ast
 /**
  * @author Adamansky Anton (adamansky@softmotions.com)
  */
-class AstElse(val astIf: AstIf? = null) : AstIndentBlock() {
+class AstElse(val astIf: AstIf? = null) : AstIndentBlock(), AstNestedBodyAware {
 
     override val name: String
         get() = "else"

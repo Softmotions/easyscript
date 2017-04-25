@@ -3,7 +3,6 @@ package com.softmotions.es
 import com.softmotions.es.ast.*
 import org.parboiled.BaseParser
 import org.parboiled.Rule
-import org.parboiled.annotations.MemoMismatches
 import org.parboiled.annotations.SuppressSubnodes
 import org.parboiled.errors.ActionException
 import org.parboiled.support.Var
@@ -26,18 +25,20 @@ open class ESParser : BaseParser<Any>() {
         val SPACE_LF_CHARS = "${SPACE_CHARS}${LF_CHARS}"
     }
 
-    open fun Script(): Rule {
+    val script: AstScript by lazy(LazyThreadSafetyMode.NONE, {
+        peek(context.valueStack.size() - 1) as AstScript
+    })
+
+    open fun Script(s: AstScript): Rule {
         return Sequence(
-                push(AstScript()),
+                push(s),
                 Spacing(),
                 FirstBlock(),
                 Spacing(),
                 action {
                     while (context.valueStack.size() > 1 && peek() is AstIndentBlock) pop()
-                    // todo remove
-                    log.info("\n\n{}", script)
                     if (context.valueStack.size() > 1) {
-                        throw Exception("Invalid stack state: " + context.valueStack)
+                        throw IllegalStateException("Invalid parser state. Stack: " + context.valueStack)
                     }
                 })
     }
@@ -79,7 +80,14 @@ open class ESParser : BaseParser<Any>() {
                                 SpacingNoLF(),
                                 BlockCore(),
                                 action {
-                                    asAstBlock(peek(1)).addChild(asAstNode(pop()))
+                                    val pn = peek(1)
+                                    if (pn is AstIndentBlock) {
+                                        val lc = pn.lastChild()
+                                        if (lc is AstNestedBodyAware) {
+                                            throw ActionException("'${lc.name}' statement must contain a nested body")
+                                        }
+                                    }
+                                    asAstBlock(pn).addChild(asAstNode(pop()))
                                 }
                         )
                 ),
@@ -474,7 +482,7 @@ open class ESParser : BaseParser<Any>() {
         return Sequence(name, Blank());
     }
 
-    @MemoMismatches
+    @SuppressSubnodes
     open fun Action(): Rule {
         return Sequence(
                 FirstOf(
@@ -606,7 +614,7 @@ open class ESParser : BaseParser<Any>() {
         )
     }
 
-    @MemoMismatches
+    @SuppressSubnodes
     open fun LetterOrDigit(): Rule {
         return FirstOf(CharRange('a', 'z'), CharRange('A', 'Z'), Digit(), '_')
     };
@@ -645,6 +653,7 @@ open class ESParser : BaseParser<Any>() {
                 IndentDedentZeroOrMore())
     }
 
+    @SuppressSubnodes
     open fun Escape(): Rule {
         return Sequence('\\', AnyOf("btnfr\"\'`\\"))
     }
@@ -652,9 +661,6 @@ open class ESParser : BaseParser<Any>() {
     ////////////////////////////////////s///////////////////////////////////////
     //                            Helpers                                    //
     ///////////////////////////////////////////////////////////////////////////
-
-    val script: AstScript
-        get() = peek(context.getValueStack().size() - 1) as AstScript
 
     fun actionError(msg: String) {
         throw ActionException(msg)
@@ -701,13 +707,18 @@ open class ESParser : BaseParser<Any>() {
     }
 
     override fun push(value: Any?): Boolean {
-        log.info("PUSH \t{}", value)
-        return super.push(value)
+        super.push(value)
+        if (script.verbose) {
+            log.info("PUSH \t{}", value)
+        }
+        return true
     }
 
     override fun pop(): Any {
         return super.pop().also {
-            log.info("POP  \t{}", it)
+            if (script.verbose) {
+                log.info("POP  \t{}", it)
+            }
         }
     }
 
