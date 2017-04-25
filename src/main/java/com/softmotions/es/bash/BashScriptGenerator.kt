@@ -6,6 +6,8 @@ import com.softmotions.es.ast.AstEcho
 import com.softmotions.es.ast.AstNode
 import com.softmotions.es.ast.AstScript
 import com.softmotions.es.ast.AstSet
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.PrintWriter
 import java.io.Writer
 import kotlin.reflect.KClass
@@ -20,6 +22,9 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
 
     companion object {
 
+        @JvmStatic
+        val log: Logger = LoggerFactory.getLogger(BashScriptGenerator::class.java)
+
         @Suppress("UNCHECKED_CAST")
         val handlers = mapOf(
                 AstEcho::class.to(BashEchoNodeHandler::class as AsmBashNodeHandlerKClass),
@@ -30,6 +35,14 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
     }
 
     val vars: MutableMap<String, AstNode> = HashMap()
+
+    override fun error(vararg vals: String) {
+        log.error(vals.joinToString(" "))
+    }
+
+    override fun warning(vararg vals: String) {
+        log.warn(vals.joinToString(" "))
+    }
 
     override fun get(name: String): AstNode? {
         return vars[name]

@@ -9,4 +9,8 @@ import java.io.PrintWriter
 interface AstNodeHandlerContext {
 
     fun process(node: AstNode, out: PrintWriter)
+
+    fun error(vararg vals: String)
+
+    fun warning(vararg vals: String)
 }
