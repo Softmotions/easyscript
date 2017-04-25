@@ -17,6 +17,7 @@ class BashSetNodeHandler : AstNodeHandler<AstSet, BashNodeHandlerContext> {
         print(node.identifier)
         val data = node.data!!
         if (data.values.size == 1) { // Single value
+                        
 
         } else {  // Array
 

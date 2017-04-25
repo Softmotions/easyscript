@@ -29,6 +29,20 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
         val SUBST_RE = Regex("([^$])?\\{([^}]+)}")
     }
 
+    val vars: MutableMap<String, AstNode> = HashMap()
+
+    override fun get(name: String): AstNode? {
+        return vars[name]
+    }
+
+    override fun set(name: String, node: AstNode?) {
+        if (node == null) {
+            vars.remove(name)
+        } else {
+            vars[name] = node
+        }
+    }
+
     override fun interpolate(v: String): String {
         return v.replace(SUBST_RE, {
             "${it.groups[1]?.value ?: ""}\${${it.groups[2]?.value}}"

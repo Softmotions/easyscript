@@ -100,7 +100,7 @@ if file exists 'path.txt'
 if file exists 'path.txt'
     and file exists `pwd`
     or file readable "/path/to/my/file.txt" and file writable 'path2.txt'
-    echo 'Hello!'
+        echo 'Hello!'
 else if file exists 'path2.txt'
     echo 'ElseIf'
     if file exists 'path3.txt'
