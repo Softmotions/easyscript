@@ -34,6 +34,8 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
         val SUBST_RE = Regex("([^$])?\\{([^}]+)}")
     }
 
+    override var indent: Int = 0
+    
     override val vars: MutableMap<String, AstNode?> = HashMap()
 
     val ctx: MutableMap<String, Any> = HashMap()

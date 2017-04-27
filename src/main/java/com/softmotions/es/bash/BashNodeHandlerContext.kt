@@ -8,6 +8,8 @@ import com.softmotions.es.ast.AstNode
  */
 interface BashNodeHandlerContext : AstNodeHandlerContext {
 
+    var indent: Int
+
     val vars: MutableMap<String, AstNode?>
 
     operator fun get(name: String): Any?

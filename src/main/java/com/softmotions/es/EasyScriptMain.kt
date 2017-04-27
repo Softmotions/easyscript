@@ -17,6 +17,9 @@ class EasyScriptMain {
     companion object {
 
         @JvmStatic
+        val D = "\$"
+
+        @JvmStatic
         val TQ = "\"\"\""
 
         @JvmStatic fun main(vararg args: String) {
@@ -27,9 +30,10 @@ class EasyScriptMain {
     fun run() {
         val data0 = """
 
-echo `pwd`
-echo "Hello {myname} {myname2}"
-echo 'Hello {eeee}'
+echo [$TQ
+Hi!!! my name
+is {loo}
+$TQ, 222]
 """
 
         val data = data0;

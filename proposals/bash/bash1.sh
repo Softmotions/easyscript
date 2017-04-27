@@ -2,7 +2,10 @@
 
 ## time -p echo 'Test' |& wc -c
 
-export V=11
-echo "$V"
+# tilde expansion only without quotes
+
+{ echo -n -e "Hi!!! my name\nis ${loo}"; echo ' 222'; }
+
+
 
 
