@@ -30,10 +30,13 @@ class EasyScriptMain {
     fun run() {
         val data0 = """
 
-echo [$TQ
-Hi!!! my name
-is {loo}
-$TQ, 222]
+set BAR 'VV\n\'V'
+set env FOO ["Test{foo}test", `pwd`, ${TQ}d
+{foo}dd${TQ}, 'sq\n{loo}sq']
+
+echo FOO
+echo 22
+
 """
 
         val data = data0;

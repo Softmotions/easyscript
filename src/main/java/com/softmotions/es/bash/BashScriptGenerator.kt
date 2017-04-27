@@ -6,6 +6,7 @@ import com.softmotions.es.ast.AstEcho
 import com.softmotions.es.ast.AstNode
 import com.softmotions.es.ast.AstScript
 import com.softmotions.es.ast.AstSet
+import com.softmotions.es.chain
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.PrintWriter
@@ -35,7 +36,7 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
     }
 
     override var indent: Int = 0
-    
+
     override val vars: MutableMap<String, AstNode?> = HashMap()
 
     val ctx: MutableMap<String, Any> = HashMap()
@@ -66,8 +67,20 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
         })
     }
 
-    override fun escapeNewLines(v: String): String {
-        return v.replace("\n", "\\n")
+    override fun escape(v: String): String {
+        return v.replace("\r", "").replace("\n", "\\n")
+    }
+
+    override fun quote(v: String, qc: String): String {
+        return "${qc}${v.replace(qc, "\\${qc}")}${qc}"
+    }
+
+    override fun mqoute(v: String): String {
+        return v.chain(this::escape, this::interpolate).let { quote(it, "\"") }
+    }
+
+    override fun dqoute(v: String): String {
+        return "\"${v.chain(this::interpolate)}\""
     }
 
     override fun generate(ast: AstScript, out: Writer) {

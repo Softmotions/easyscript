@@ -14,3 +14,12 @@ fun Writer.print(num: Int, v: String, ch: Char = ' ') {
     this.write(ch.toString().repeat(num))
     this.write(v)
 }
+
+
+fun <T> T.chain(vararg blocks: (T) -> T): T {
+    var ret = this
+    blocks.forEach {
+        ret = it.invoke(ret)
+    }
+    return ret
+}

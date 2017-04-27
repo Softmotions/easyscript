@@ -1,5 +1,7 @@
 package com.softmotions.es.ast
 
+val TQ = "\"\"\""
+
 enum class ValueType {
     IDENTIFIER,
     NUMBER,
@@ -27,7 +29,28 @@ data class TypedValue(val type: ValueType, val value: String) : AstNode() {
         fun run(value: String): TypedValue = TypedValue(ValueType.RUN, value.trim())
     }
 
+    fun asQuoted(): String {
+        when (type) {
+            ValueType.IDENTIFIER, ValueType.NUMBER -> {
+                return value
+            }
+            ValueType.SQUOTED -> {
+                return "'${value}'"
+            }
+            ValueType.DQUOTED -> {
+                return "\"${value}\""
+            }
+            ValueType.MQUOTED -> {
+                return "${TQ}${value}${TQ}"
+            }
+            ValueType.RUN -> {
+                return "`${value}`"
+            }
+        }
+    }
+
     override fun toString(): String {
         return "$type($value)"
     }
+
 }
