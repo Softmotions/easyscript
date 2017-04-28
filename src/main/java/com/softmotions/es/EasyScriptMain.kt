@@ -30,12 +30,8 @@ class EasyScriptMain {
     fun run() {
         val data0 = """
 
-shell ${TQ}
-    ps -Af;
-    echo 'foo'
-    echo "BAAAR!" ${TQ}
-        fail "oopss" exit 22
-
+`cat foo.txt`
+    fail
 """
 
         val data = data0;

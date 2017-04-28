@@ -197,25 +197,29 @@ open class ESParser : BaseParser<Any>() {
     open fun Fail(): Rule {
         val vnode = Var<AstFail>()
         return Sequence(
-                Action("fail"),
+                "fail",
                 action {
                     vnode.set(AstFail())
                 },
                 Optional(
-                        FirstOf(StringMultiQuoted(),
-                                StringDoubleQuoted(),
-                                StringSingleQuoted() /* todo call */),
-                        action {
-                            vnode.get().msg = pop() as TypedValue
-                        }
-                ),
-                Optional(
-                        SpacingNoLF(),
-                        Action("exit"),
-                        Number(),
-                        action {
-                            vnode.get().exitCode = pop() as TypedValue
-                        }
+                        Blank(),
+                        Optional(
+                                Optional(
+                                        FirstOf(StringMultiQuoted(),
+                                                StringDoubleQuoted(),
+                                                StringSingleQuoted() /* todo call */),
+                                        action {
+                                            vnode.get().msg = pop() as TypedValue
+                                        }
+                                ),
+                                Optional(
+                                        SpacingNoLF(),
+                                        Action("exit"),
+                                        Number(),
+                                        action {
+                                            vnode.get().exitCode = pop() as TypedValue
+                                        }
+                                ))
                 ),
                 action {
                     push(vnode.getAndSet(null))
@@ -765,5 +769,4 @@ open class ESParser : BaseParser<Any>() {
         System.err.println(s.toList()) // set breakpoint here if required
         return true
     }
-
 }
