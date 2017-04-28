@@ -2,10 +2,7 @@ package com.softmotions.es.bash
 
 import com.softmotions.es.AstNodeHandler
 import com.softmotions.es.ScriptGenerator
-import com.softmotions.es.ast.AstEcho
-import com.softmotions.es.ast.AstNode
-import com.softmotions.es.ast.AstScript
-import com.softmotions.es.ast.AstSet
+import com.softmotions.es.ast.*
 import com.softmotions.es.chain
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -29,7 +26,8 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
         @Suppress("UNCHECKED_CAST")
         val handlers = mapOf(
                 AstEcho::class.to(BashEchoNodeHandler::class as AsmBashNodeHandlerKClass),
-                AstSet::class.to(BashSetNodeHandler::class as AsmBashNodeHandlerKClass)
+                AstSet::class.to(BashSetNodeHandler::class as AsmBashNodeHandlerKClass),
+                AstRunBlock::class.to(BashRunBlockNodeHandler::class as AsmBashNodeHandlerKClass)
         )
 
         val SUBST_RE = Regex("([^$])?\\{([^}]+)}")
@@ -67,20 +65,24 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
         })
     }
 
-    override fun escape(v: String): String {
+    override fun escapeNewLines(v: String): String {
         return v.replace("\r", "").replace("\n", "\\n")
     }
 
-    override fun quote(v: String, qc: String): String {
-        return "${qc}${v.replace(qc, "\\${qc}")}${qc}"
+    override fun escapeLinesContinue(v: String): String {
+        return v.replace("\r", "").replace("\n", "\\\n")
+    }
+
+    override fun quote(v: String, sq: String, eq: String?): String {
+        var sv = v.replace(sq, "\\${sq}")
+        if (eq != null && sq != eq) {
+            sv = sv.replace(eq, "\\${eq}")
+        }
+        return "${sq}${sv}${eq ?: sq}"
     }
 
     override fun mqoute(v: String): String {
-        return v.chain(this::escape, this::interpolate).let { quote(it, "\"") }
-    }
-
-    override fun dqoute(v: String): String {
-        return "\"${v.chain(this::interpolate)}\""
+        return v.chain(this::escapeNewLines, this::interpolate).let { quote(it, "\"") }
     }
 
     override fun generate(ast: AstScript, out: Writer) {

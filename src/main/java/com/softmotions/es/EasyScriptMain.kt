@@ -30,12 +30,10 @@ class EasyScriptMain {
     fun run() {
         val data0 = """
 
-set BAR 'VV\n\'V'
-set env FOO ["Test{foo}test", `pwd`, ${TQ}d
-{foo}dd${TQ}, 'sq\n{loo}sq']
-
-echo FOO
-echo 22
+`ps -Af`
+    echo "Fail {HOME}"
+    `pwd`
+        echo 'Pwd \'\nfail'
 
 """
 

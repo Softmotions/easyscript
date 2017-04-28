@@ -15,8 +15,8 @@ class BashEchoNodeHandler : AstNodeHandler<AstEcho, BashNodeHandlerContext> {
 
     override fun handle(ctx: BashNodeHandlerContext, node: AstEcho, out: PrintWriter) {
 
-        // todo echo already set var!
-        
+        // todo echo already set var?
+
         out.repeat(ctx.indent)
         val values = node.data.values
         if (values.size > 1) {
@@ -38,16 +38,16 @@ class BashEchoNodeHandler : AstNodeHandler<AstEcho, BashNodeHandlerContext> {
                     out.print("\"${sep}\${$value}\"")
                 }
                 ValueType.SQUOTED -> {
-                    out.print("\$'${sep}${value}'")
+                    out.print("\$'${sep}${ctx.escapeNewLines(value)}'")
                 }
                 ValueType.DQUOTED -> {
-                    out.print("${dsep}${ctx.dqoute(value)}")
+                    out.print("\"${sep}${ctx.interpolate(value)}\"")
                 }
                 ValueType.MQUOTED -> {
                     out.print("-e ${dsep}${ctx.mqoute(value)}")
                 }
                 ValueType.RUN -> {
-                    out.print("`${sep}${value.chain(ctx::interpolate)}`\"")
+                    out.print("\"${sep}`${value.chain(ctx::interpolate)}`\"")
                 }
             }
             out.print(';')

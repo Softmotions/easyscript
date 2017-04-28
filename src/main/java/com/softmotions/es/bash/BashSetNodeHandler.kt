@@ -20,7 +20,7 @@ class BashSetNodeHandler : AstNodeHandler<AstSet, BashNodeHandlerContext> {
                     out.print("\${${v.value}}")
                 }
                 ValueType.DQUOTED -> {
-                    out.print(ctx.dqoute(v.value))
+                    out.print(ctx.interpolate(v.asQuoted()))
                 }
                 ValueType.SQUOTED -> {
                     out.print("$'${v.value}'");

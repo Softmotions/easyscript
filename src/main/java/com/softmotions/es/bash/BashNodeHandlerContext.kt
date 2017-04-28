@@ -18,11 +18,11 @@ interface BashNodeHandlerContext : AstNodeHandlerContext {
 
     fun interpolate(v: String): String
 
-    fun escape(v: String): String
+    fun escapeNewLines(v: String): String
 
-    fun quote(v: String, qc: String = "\'"): String
+    fun escapeLinesContinue(v: String): String
+
+    fun quote(v: String, sq: String = "\'", eq: String? = null): String
 
     fun mqoute(v: String): String
-
-    fun dqoute(v: String): String
 }
