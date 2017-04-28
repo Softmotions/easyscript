@@ -30,10 +30,11 @@ class EasyScriptMain {
     fun run() {
         val data0 = """
 
-`ps -Af`
-    echo "Fail {HOME}"
-    `pwd`
-        echo 'Pwd \'\nfail'
+shell ${TQ}
+    ps -Af;
+    echo 'foo'
+    echo "BAAAR!" ${TQ}
+        fail "oopss" exit 22
 
 """
 

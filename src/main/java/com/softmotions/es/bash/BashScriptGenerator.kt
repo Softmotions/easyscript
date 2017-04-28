@@ -27,7 +27,9 @@ class BashScriptGenerator : ScriptGenerator, BashNodeHandlerContext {
         val handlers = mapOf(
                 AstEcho::class.to(BashEchoNodeHandler::class as AsmBashNodeHandlerKClass),
                 AstSet::class.to(BashSetNodeHandler::class as AsmBashNodeHandlerKClass),
-                AstRunBlock::class.to(BashRunBlockNodeHandler::class as AsmBashNodeHandlerKClass)
+                AstRunBlock::class.to(BashRunBlockNodeHandler::class as AsmBashNodeHandlerKClass),
+                AstShell::class.to(BashShellNodeHandler::class as AsmBashNodeHandlerKClass),
+                AstFail::class.to(BashFailNodeHandler::class as AsmBashNodeHandlerKClass)
         )
 
         val SUBST_RE = Regex("([^$])?\\{([^}]+)}")

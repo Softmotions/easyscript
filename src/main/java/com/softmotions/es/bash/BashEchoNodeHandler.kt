@@ -2,6 +2,7 @@ package com.softmotions.es.bash
 
 import com.softmotions.es.AstNodeHandler
 import com.softmotions.es.ast.AstEcho
+import com.softmotions.es.ast.TypedValue
 import com.softmotions.es.ast.ValueType
 import com.softmotions.es.chain
 import com.softmotions.es.print
@@ -13,13 +14,12 @@ import java.io.PrintWriter
  */
 class BashEchoNodeHandler : AstNodeHandler<AstEcho, BashNodeHandlerContext> {
 
-    override fun handle(ctx: BashNodeHandlerContext, node: AstEcho, out: PrintWriter) {
-
-        // todo echo already set var?
-
+    internal fun echo(ctx: BashNodeHandlerContext,
+                      values: List<TypedValue>,
+                      out: PrintWriter,
+                      inblock: Boolean = true) {
         out.repeat(ctx.indent)
-        val values = node.data.values
-        if (values.size > 1) {
+        if (inblock && values.size > 1) {
             out.print("{ ")
         }
         values.forEachIndexed({ idx, (type, value) ->
@@ -52,9 +52,13 @@ class BashEchoNodeHandler : AstNodeHandler<AstEcho, BashNodeHandlerContext> {
             }
             out.print(';')
         })
-        if (values.size > 1) {
+        if (inblock && values.size > 1) {
             out.print(" }");
         }
+    }
+
+    override fun handle(ctx: BashNodeHandlerContext, node: AstEcho, out: PrintWriter) {
+        echo(ctx, node.data.values, out)
         out.println()
     }
 }

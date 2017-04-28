@@ -1,7 +1,13 @@
 #!/bin/bash
 
-(echo 'eee' | grep ";oew;lewl")
+(ps -Af;
+    echo 'foo'
+    echo "BAAAR!")
  if [[ $? != '0' ]]; then
     echo "Fail ${HOME}";
-    exit 1
+  (pwd)
+   if [[ $? != '0' ]]; then
+        echo $'Pwd \'\nfail';
+   fi
  fi
+
